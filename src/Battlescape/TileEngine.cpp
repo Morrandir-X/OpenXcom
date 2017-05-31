@@ -1497,7 +1497,7 @@ std::vector<TileEngine::ReactionScore> TileEngine::getSpottingUnits(BattleUnit* 
 	{
 		for (std::vector<BattleUnit*>::const_iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 		{
-            ReactionScore rs = determineReactionType(*i, unit);
+			ReactionScore rs = determineReactionType(*i, unit);
 
 				// not dead/unconscious
 			if (!(*i)->isOut() &&
@@ -1506,7 +1506,7 @@ std::vector<TileEngine::ReactionScore> TileEngine::getSpottingUnits(BattleUnit* 
 				// not about to pass out
 				(*i)->getStunlevel() < (*i)->getHealth() &&
 				// have any chances for reacting
-                rs.reactionScore >= threshold &&
+				rs.reactionScore >= threshold &&
 				// not a friend
 				(*i)->getFaction() != _save->getSide() &&
 				// not a civilian
@@ -1541,7 +1541,7 @@ std::vector<TileEngine::ReactionScore> TileEngine::getSpottingUnits(BattleUnit* 
 							BattleItem *weapon = (*i)->getMainHandWeapon((*i)->getFaction() != FACTION_PLAYER);
 							int accuracy = (*i)->getFiringAccuracy(rs.attackType, weapon, _save->getBattleGame()->getMod());
 							int distance = _save->getTileEngine()->distance((*i)->getPosition(), unit->getPosition());
-                            int upperLimit = rs.attackType == BA_SNAPSHOT ? weapon->getRules()->getSnapRange() : weapon->getRules()->getAutoRange();
+							int upperLimit = rs.attackType == BA_SNAPSHOT ? weapon->getRules()->getSnapRange() : weapon->getRules()->getAutoRange();
 							int lowerLimit = weapon->getRules()->getMinRange();
 							if (distance > upperLimit)
 							{
@@ -1587,7 +1587,7 @@ TileEngine::ReactionScore *TileEngine::getReactor(std::vector<TileEngine::Reacti
 			best = &(*i);
 		}
 	}
-    if (best &&(unit->getReactionScore((int)floor(0.25 * unit->getBaseStats()->tu)) <= best->reactionScore))
+	if (best &&(unit->getReactionScore((int)floor(0.25 * unit->getBaseStats()->tu)) <= best->reactionScore))
 	{
 		if (best->unit->getOriginalFaction() == FACTION_PLAYER)
 		{
@@ -1609,7 +1609,7 @@ TileEngine::ReactionScore *TileEngine::getReactor(std::vector<TileEngine::Reacti
  */
 TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, BattleUnit *target)
 {
-    ReactionScore reaction =
+	ReactionScore reaction =
 	{
 		unit,
 		BA_NONE,
@@ -1631,79 +1631,79 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 	}
 
 	// has a weapon
-    BattleItem *weapon = unit->getMainHandWeapon(unit->getFaction() != FACTION_PLAYER);
-
-    // prioritize auto shot if in close range
-    if (Options::extendedReactionFire &&
-        _save->canUseWeapon(weapon, unit, false) &&
-        distance(unit->getPosition(), target->getPosition()) <= weapon->getRules()->getMaxRange() &&
-        (   // has a melee weapon capable of reaction and is in melee range
-         (weapon->getRules()->getBattleType() == BT_MELEE &&
-          validMeleeRange(unit, target, unit->getDirection()) &&
-          BattleActionCost(BA_HIT, unit, weapon).haveTU() &&
-          (!Options::extendedReactionFire || meleeWeapon->getRules()->canReactMelee())) ||
-         // has a gun capable of auto reaction shot with ammo
-         (weapon->getRules()->getBattleType() != BT_MELEE &&
-          weapon->getAmmoItem() &&
-          BattleActionCost(BA_AUTOSHOT, unit, weapon).haveTU() &&
-          weapon->getRules()->canReactAuto() &&
-          // and is within accurate auto shot range or is only capable of auto reaction shot
-          (distance(unit->getPosition(), target->getPosition()) <= weapon->getRules()->getAutoRange() ||
-           (weapon->getRules()->getCostSnap().Time == 0 && weapon->getRules()->getCostAimed().Time == 0) ||
-           (!weapon->getRules()->canReactSnap() && !weapon->getRules()->canReactAimed())))))
-    {
-        reaction.reactionScore = unit->getReactionScore(unit->getActionTUs(BA_AUTOSHOT, weapon).Time);
-        reaction.attackType = BA_AUTOSHOT;
-        reaction.reactionReduction = 1.0 * BattleActionCost(BA_AUTOSHOT, unit, weapon).Time * unit->getBaseStats
-        ()->reactions / unit->getBaseStats()->tu;
-        return reaction;
-    }
-    
+	BattleItem *weapon = unit->getMainHandWeapon(unit->getFaction() != FACTION_PLAYER);
+	
+	// prioritize auto shot if in close range
+	if (Options::extendedReactionFire &&
+		_save->canUseWeapon(weapon, unit, false) &&
+		distance(unit->getPosition(), target->getPosition()) <= weapon->getRules()->getMaxRange() &&
+		(   // has a melee weapon capable of reaction and is in melee range
+		 (weapon->getRules()->getBattleType() == BT_MELEE &&
+		  validMeleeRange(unit, target, unit->getDirection()) &&
+		  BattleActionCost(BA_HIT, unit, weapon).haveTU() &&
+		  (!Options::extendedReactionFire || meleeWeapon->getRules()->canReactMelee())) ||
+		 // has a gun capable of auto reaction shot with ammo
+		 (weapon->getRules()->getBattleType() != BT_MELEE &&
+		  weapon->getAmmoItem() &&
+		  BattleActionCost(BA_AUTOSHOT, unit, weapon).haveTU() &&
+		  weapon->getRules()->canReactAuto() &&
+		  // and is within accurate auto shot range or is only capable of auto reaction shot
+		  (distance(unit->getPosition(), target->getPosition()) <= weapon->getRules()->getAutoRange() ||
+		   (weapon->getRules()->getCostSnap().Time == 0 && weapon->getRules()->getCostAimed().Time == 0) ||
+		   (!weapon->getRules()->canReactSnap() && !weapon->getRules()->canReactAimed())))))
+	{
+		reaction.reactionScore = unit->getReactionScore(unit->getActionTUs(BA_AUTOSHOT, weapon).Time);
+		reaction.attackType = BA_AUTOSHOT;
+		reaction.reactionReduction = 1.0 * BattleActionCost(BA_AUTOSHOT, unit, weapon).Time * unit->getBaseStats
+		()->reactions / unit->getBaseStats()->tu;
+		return reaction;
+	}
+	
     // next try snap shot if in snap shot range
-    if (_save->canUseWeapon(weapon, unit, false) &&
-        distance(unit->getPosition(), target->getPosition()) < weapon->getRules()->getMaxRange() &&
-        (	// has a melee weapon capable of reaction and is in melee range
-         (weapon->getRules()->getBattleType() == BT_MELEE &&
-          validMeleeRange(unit, target, unit->getDirection()) &&
-          BattleActionCost(BA_HIT, unit, weapon).haveTU() &&
-          (!Options::extendedReactionFire || meleeWeapon->getRules()->canReactMelee())) ||
-         // has a gun capable of snap reaction shot with ammo
-         (weapon->getRules()->getBattleType() != BT_MELEE &&
-          weapon->getAmmoItem() &&
-          BattleActionCost(BA_SNAPSHOT, unit, weapon).haveTU() &&
-          (!Options::extendedReactionFire || weapon->getRules()->canReactSnap()) &&
-          // and is in effective snap shot range or is not capable of aimed reaction shot (at all or out of TUs) or not using extended reaction fire
-          (!Options::extendedReactionFire ||
-           distance(unit->getPosition(), target->getPosition()) <= weapon->getRules()->getSnapRange() ||
-          (weapon->getRules()->getCostAimed().Time == 0 || !weapon->getRules()->canReactAimed() || !BattleActionCost(BA_AIMEDSHOT, unit, weapon).haveTU())))))
-    {
-        reaction.reactionScore = unit->getReactionScore(unit->getActionTUs(BA_SNAPSHOT, weapon).Time);
-        reaction.attackType = BA_SNAPSHOT;
-        reaction.reactionReduction = 1.0 * BattleActionCost(BA_SNAPSHOT, unit, weapon).Time * unit->getBaseStats()->reactions / unit->getBaseStats()->tu;
-        return reaction;
-    }
-    
-    // finally attempt an aimed shot if in effective aimed shot range
-    if (Options::extendedReactionFire &&
-        _save->canUseWeapon(weapon, unit, false) &&
-        distance(unit->getPosition(), target->getPosition()) < weapon->getRules()->getMaxRange() &&
-        (   // has a melee weapon capable of reaction and is in melee range
-            (weapon->getRules()->getBattleType() == BT_MELEE &&
-            validMeleeRange(unit, target, unit->getDirection()) &&
-            BattleActionCost(BA_HIT, unit, weapon).haveTU() &&
-            (!Options::extendedReactionFire || meleeWeapon->getRules()->canReactMelee())) ||
-            // has a gun capable of aimed reaction shot with ammo
-            (weapon->getRules()->getBattleType() != BT_MELEE &&
-                weapon->getAmmoItem() &&
-                BattleActionCost(BA_AIMEDSHOT, unit, weapon).haveTU() &&
-             weapon->getRules()->canReactAimed())))
-    {
-        reaction.reactionScore = unit->getReactionScore(unit->getActionTUs(BA_AIMEDSHOT, weapon).Time);
-        reaction.attackType = BA_AIMEDSHOT;
-        reaction.reactionReduction = 1.0 * BattleActionCost(BA_AIMEDSHOT, unit, weapon).Time * unit->getBaseStats
-            ()->reactions / unit->getBaseStats()->tu;
-        return reaction;
-    }
+	if (_save->canUseWeapon(weapon, unit, false) &&
+		distance(unit->getPosition(), target->getPosition()) < weapon->getRules()->getMaxRange() &&
+		(	// has a melee weapon capable of reaction and is in melee range
+		 (weapon->getRules()->getBattleType() == BT_MELEE &&
+		  validMeleeRange(unit, target, unit->getDirection()) &&
+		  BattleActionCost(BA_HIT, unit, weapon).haveTU() &&
+		  (!Options::extendedReactionFire || meleeWeapon->getRules()->canReactMelee())) ||
+		 // has a gun capable of snap reaction shot with ammo
+		 (weapon->getRules()->getBattleType() != BT_MELEE &&
+		  weapon->getAmmoItem() &&
+		  BattleActionCost(BA_SNAPSHOT, unit, weapon).haveTU() &&
+		  (!Options::extendedReactionFire || weapon->getRules()->canReactSnap()) &&
+		  // and is in effective snap shot range or is not capable of aimed reaction shot (at all or out of TUs) or not using extended reaction fire
+		  (!Options::extendedReactionFire ||
+		   distance(unit->getPosition(), target->getPosition()) <= weapon->getRules()->getSnapRange() ||
+		   (weapon->getRules()->getCostAimed().Time == 0 || !weapon->getRules()->canReactAimed() || !BattleActionCost(BA_AIMEDSHOT, unit, weapon).haveTU())))))
+	{
+		reaction.reactionScore = unit->getReactionScore(unit->getActionTUs(BA_SNAPSHOT, weapon).Time);
+		reaction.attackType = BA_SNAPSHOT;
+		reaction.reactionReduction = 1.0 * BattleActionCost(BA_SNAPSHOT, unit, weapon).Time * unit->getBaseStats()->reactions / unit->getBaseStats()->tu;
+		return reaction;
+	}
+	
+	// finally attempt an aimed shot if in effective aimed shot range
+	if (Options::extendedReactionFire &&
+		_save->canUseWeapon(weapon, unit, false) &&
+		distance(unit->getPosition(), target->getPosition()) < weapon->getRules()->getMaxRange() &&
+		(   // has a melee weapon capable of reaction and is in melee range
+		 (weapon->getRules()->getBattleType() == BT_MELEE &&
+		  validMeleeRange(unit, target, unit->getDirection()) &&
+		  BattleActionCost(BA_HIT, unit, weapon).haveTU() &&
+		  (!Options::extendedReactionFire || meleeWeapon->getRules()->canReactMelee())) ||
+		 // has a gun capable of aimed reaction shot with ammo
+		 (weapon->getRules()->getBattleType() != BT_MELEE &&
+		  weapon->getAmmoItem() &&
+		  BattleActionCost(BA_AIMEDSHOT, unit, weapon).haveTU() &&
+		  weapon->getRules()->canReactAimed())))
+	{
+		reaction.reactionScore = unit->getReactionScore(unit->getActionTUs(BA_AIMEDSHOT, weapon).Time);
+		reaction.attackType = BA_AIMEDSHOT;
+		reaction.reactionReduction = 1.0 * BattleActionCost(BA_AIMEDSHOT, unit, weapon).Time * unit->getBaseStats
+		()->reactions / unit->getBaseStats()->tu;
+		return reaction;
+	}
 
 	return reaction;
 }
