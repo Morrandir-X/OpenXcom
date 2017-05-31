@@ -1844,19 +1844,19 @@ int BattleUnit::getFatalWounds() const
  */
 double BattleUnit::getReactionScore(int tuCost) const
 {
-    // If extended reaction fire option is enabled, the reaction score depends on the TUs required to operate the weapon.
-    // Default is set to assault rifle snap shot, 25% of all TUs.
-    int tuAction;
-    if (Options::extendedReactionFire) {
-        // Anything above default slows the unit down, and below it speeds it up, by half of the difference.
-        tuAction = int((tuCost - int(0.25 * getBaseStats()->tu))/2);
-    } else {
-        // Otherwise revert to standard calculation.
-        tuAction = 0;
-    }
-    //(Reactions Stat) x (Current Time Units - Possible Modification for ERF) / Max TUs
-    double score = (double)getBaseStats()->reactions * (double)(getTimeUnits() - tuAction) / (double)getBaseStats()->tu;
-    return score;
+	// If extended reaction fire option is enabled, the reaction score depends on the TUs required to operate the weapon.
+	// Default is set to assault rifle snap shot, 25% of all TUs.
+	int tuAction;
+	if (Options::extendedReactionFire) {
+		// Anything above default slows the unit down, and below it speeds it up, by half of the difference.
+		tuAction = int((tuCost - int(0.25 * getBaseStats()->tu))/2);
+	} else {
+		// Otherwise revert to standard calculation.
+		tuAction = 0;
+	}
+	//(Reactions Stat) x (Current Time Units - Possible Modification for ERF) / Max TUs
+	double score = (double)getBaseStats()->reactions * (double)(getTimeUnits() - tuAction) / (double)getBaseStats()->tu;
+	return score;
 }
 
 /**
