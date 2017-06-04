@@ -18,6 +18,7 @@
  */
 #include "BattlescapeButton.h"
 #include "../Engine/Action.h"
+#include "../Engine/Options.h"
 
 namespace OpenXcom
 {
@@ -29,7 +30,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _inverted(false), _toggleMode(INVERT_NONE), _altSurface(0)
+BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _groupSelected(0), _inverted(false), _selected(false), _toggleMode(INVERT_NONE), _altSurface(0), _altSurfaceSel(0), _altSurfaceInvSel(0)
 {
 }
 
@@ -39,6 +40,8 @@ BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : Inte
 BattlescapeButton::~BattlescapeButton()
 {
 	delete _altSurface;
+	delete _altSurfaceSel;
+	delete _altSurfaceInvSel;
 }
 
 /**
@@ -60,7 +63,7 @@ Uint8 BattlescapeButton::getColor() const
 }
 
 /**
- * Changes the button group this battlescape button belongs to.
+ * Changes the button group this battlescape button belongs to, for general TU reservation.
  * @param group Pointer to the pressed button pointer in the group.
  * Null makes it a regular button.
  */
@@ -69,6 +72,18 @@ void BattlescapeButton::setGroup(BattlescapeButton **group)
 	_group = group;
 	if (_group != 0 && *_group == this)
 		_inverted = true;
+}
+	
+/**
+ * Changes the button group this battlescape button belongs to, for individual TU reservation.
+ * @param group Pointer to the pressed button pointer in the group.
+ * Null makes it a regular button.
+ */
+void BattlescapeButton::setGroupSelected(BattlescapeButton **groupSelected)
+{
+	_groupSelected = groupSelected;
+	if (_groupSelected != 0 && *_groupSelected == this)
+		_selected = true;
 }
 
 /**
@@ -79,18 +94,31 @@ void BattlescapeButton::setGroup(BattlescapeButton **group)
  */
 void BattlescapeButton::mousePress(Action *action, State *state)
 {
-	if (_group != 0)
+	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		if (_group != 0)
 		{
 			(*_group)->toggle(false);
 			*_group = this;
 			_inverted = true;
 		}
+		else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_inverted && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
+		{
+			_inverted = true;
+		}
 	}
-	else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_inverted && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
+	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
-		_inverted = true;
+		if (_groupSelected != 0)
+		{
+			(*_groupSelected)->toggleSelected(false);
+			*_groupSelected = this;
+			Options::extendedReactionFire ? _selected = true : _selected = false;
+		}
+		else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_selected && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
+		{
+			Options::extendedReactionFire ? _selected = true : _selected = false;
+		}
 	}
 	InteractiveSurface::mousePress(action, state);
 }
@@ -104,7 +132,19 @@ void BattlescapeButton::mouseRelease(Action *action, State *state)
 {
 	if (_inverted && isButtonHandled(action->getDetails()->button.button))
 	{
-		_inverted = false;
+		if (_group == 0) // For zero TUs button
+		{
+			_inverted = false;
+			_selected = false;
+		}
+		else if (action->getDetails()->button.button == SDL_BUTTON_LEFT) // Left clicked on a reserve button
+		{
+			_inverted = false;
+		}
+		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) // Right clicked on a reserve button
+		{
+			_selected = false;
+		}
 	}
 	InteractiveSurface::mouseRelease(action, state);
 }
@@ -120,7 +160,16 @@ void BattlescapeButton::toggle(bool press)
 		_inverted = press;
 	}
 }
-
+	
+/**
+ * Toggling reserve TU button for individual selection either ON or OFF and keep track of the state using our internal variables.
+ * @param press Set this button as pressed.
+ */
+void BattlescapeButton::toggleSelected(bool press)
+{
+	Options::extendedReactionFire ? _selected = press : _selected = false;
+}
+	
 /**
  * Toggle inversion mode: click to press, click to unpress.
  */
@@ -146,12 +195,21 @@ void BattlescapeButton::allowClickInversion()
 void BattlescapeButton::initSurfaces()
 {
 	delete _altSurface;
-	_altSurface = new Surface(_surface->w, _surface->h, _x, _y);
+	_altSurface = new Surface(_surface->w, _surface->h, _x, _y); // For inverted reserve button
 	_altSurface->setPalette(getPalette());
+	delete _altSurfaceSel;
+	_altSurfaceSel = new Surface(_surface->w, _surface->h, _x, _y); // For selected but not inverted reserve button
+	_altSurfaceSel->setPalette(getPalette());
+	delete _altSurfaceInvSel;
+	_altSurfaceInvSel = new Surface(_surface->w, _surface->h, _x, _y); // For selected and inverted reserve button
+	_altSurfaceInvSel->setPalette(getPalette());
 
 	// Lock the surface
 	_altSurface->lock();
+	_altSurfaceSel->lock();
+	_altSurfaceInvSel->lock();
 
+	// FIXME: IMPLEMENT OTHER ALTSURFACES FOR TFTD MODE
 	// tftd mode: use a colour lookup table instead of simple palette inversion for our "pressed" state
 	if (_tftdMode)
 	{
@@ -187,10 +245,42 @@ void BattlescapeButton::initSurfaces()
 				_altSurface->setPixelIterative(&x, &y, 0);
 			}
 		}
+		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
+		{
+			Uint8 pixel = getPixel(x, y);
+			if (pixel == 34) // The colour of the shooting figure in reserve button
+			{
+				_altSurfaceSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color - 10 - (int)pixel));
+			}
+			else
+			{
+				_altSurfaceSel->setPixelIterative(&x, &y, 0);
+			}
+		}
+		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
+		{
+			Uint8 pixel = getPixel(x, y);
+			if (pixel > 0)
+			{
+				if (pixel == 34) {
+					_altSurfaceInvSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color - 10 - (int)pixel));
+				}
+				else
+				{
+					_altSurfaceInvSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color + 3 - (int)pixel));
+				}
+			}
+			else
+			{
+				_altSurfaceInvSel->setPixelIterative(&x, &y, 0);
+			}
+		}
 	}
 
 	// Unlock the surface
 	_altSurface->unlock();
+	_altSurfaceSel->unlock();
+	_altSurfaceInvSel->unlock();
 }
 
 /**
@@ -200,9 +290,17 @@ void BattlescapeButton::initSurfaces()
  */
 void BattlescapeButton::blit(Surface *surface)
 {
-	if (_inverted)
+	if (_inverted && !_selected)
 	{
 		_altSurface->blit(surface);
+	}
+	else if (!_inverted && _selected)
+	{
+		_altSurfaceSel->blit(surface);
+	}
+	else if (_inverted && _selected)
+	{
+		_altSurfaceInvSel->blit(surface);
 	}
 	else
 	{
@@ -235,5 +333,4 @@ void BattlescapeButton::setY(int y)
 		_altSurface->setY(y);
 	}
 }
-
 }
