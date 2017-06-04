@@ -525,11 +525,6 @@ BattlescapeState::BattlescapeState() : _reserve(0), _select(0), _firstInit(true)
 	_btnReserveSnap->setGroup(&_reserve);
 	_btnReserveAimed->setGroup(&_reserve);
 	_btnReserveAuto->setGroup(&_reserve);
-    
-    _btnReserveNone->setGroupSelected(&_select);
-    _btnReserveSnap->setGroupSelected(&_select);
-    _btnReserveAimed->setGroupSelected(&_select);
-    _btnReserveAuto->setGroupSelected(&_select);
 
 	_btnReserveNone->setGroupSelected(&_select);
 	_btnReserveSnap->setGroupSelected(&_select);
@@ -619,25 +614,6 @@ void BattlescapeState::init()
 		_reserve = _btnReserveNone;
 		break;
 	}
-    switch(_save->getSelectedUnit()->getReservedAction())
-    {
-    case BA_SNAPSHOT:
-        _select = _btnReserveSnap;
-        _btnReserveSnap->toggleSelected(true);
-        break;
-    case BA_AUTOSHOT:
-        _select = _btnReserveAuto;
-        _btnReserveAuto->toggleSelected(true);
-        break;
-    case BA_AIMEDSHOT:
-        _select = _btnReserveAimed;
-        _btnReserveAimed->toggleSelected(true);
-        break;
-    default:
-        _select = _btnReserveNone;
-        _btnReserveNone->toggleSelected(true);
-        break;
-    }
 	switch(_save->getSelectedUnit()->getReservedAction())
 	{
 	case BA_SNAPSHOT:
@@ -1025,10 +1001,6 @@ void BattlescapeState::btnShowMapClick(Action *)
  */
 void BattlescapeState::toggleReserveActionButton(BattleUnit* unit)
 {
-    _btnReserveSnap->toggleSelected(unit->getReservedAction() == BA_SNAPSHOT);
-    _btnReserveAuto->toggleSelected(unit->getReservedAction() == BA_AUTOSHOT);
-    _btnReserveAimed->toggleSelected(unit->getReservedAction() == BA_AIMEDSHOT);
-    _btnReserveNone->toggleSelected(unit->getReservedAction() == BA_NONE);
 	_btnReserveSnap->toggleSelected(unit->getReservedAction() == BA_SNAPSHOT);
 	_btnReserveAuto->toggleSelected(unit->getReservedAction() == BA_AUTOSHOT);
 	_btnReserveAimed->toggleSelected(unit->getReservedAction() == BA_AIMEDSHOT);
@@ -1382,63 +1354,6 @@ void BattlescapeState::btnReserveClick(Action *action)
 	if (allowButtons())
 	{
 		SDL_Event ev;
-        if (action->getDetails()->button.button == SDL_BUTTON_LEFT) {
-            ev.type = SDL_MOUSEBUTTONDOWN;
-            ev.button.button = SDL_BUTTON_LEFT;
-            Action a = Action(&ev, 0.0, 0.0, 0, 0);
-            action->getSender()->mousePress(&a, this);
-            
-            if (_reserve == _btnReserveNone)
-                _battleGame->setTUReserved(BA_NONE);
-            else if (_reserve == _btnReserveSnap)
-                _battleGame->setTUReserved(BA_SNAPSHOT);
-            else if (_reserve == _btnReserveAimed)
-                _battleGame->setTUReserved(BA_AIMEDSHOT);
-            else if (_reserve == _btnReserveAuto)
-                _battleGame->setTUReserved(BA_AUTOSHOT);
-            
-            // update any path preview
-            if (_battleGame->getPathfinding()->isPathPreviewed())
-            {
-                _battleGame->getPathfinding()->removePreview();
-                _battleGame->getPathfinding()->previewPath();
-            }
-        }
-        
-        // If Extended Reaction Fire is enabled, process right button click.
-        if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
-        {
-            ev.type = SDL_MOUSEBUTTONDOWN;
-            ev.button.button = SDL_BUTTON_RIGHT;
-            Action a = Action(&ev, 0.0, 0.0, 0, 0);
-            action->getSender()->mousePress(&a, this);
-            
-            if (Options::extendedReactionFire)
-            {
-                if (_select == _btnReserveNone)
-                    _battleGame->setReservedAction(BA_NONE);
-                else if (_select == _btnReserveSnap)
-                    _battleGame->setReservedAction(BA_SNAPSHOT);
-                else if (_select == _btnReserveAuto)
-                    _battleGame->setReservedAction(BA_AUTOSHOT);
-                else if (_select == _btnReserveAimed)
-                    _battleGame->setReservedAction(BA_AIMEDSHOT);
-                
-                toggleReserveActionButton(_save->getSelectedUnit());
-                
-                // update any path preview
-                if (_battleGame->getPathfinding()->isPathPreviewed())
-                {
-                    _battleGame->getPathfinding()->removePreview();
-                    _battleGame->getPathfinding()->previewPath();
-                }
-            }
-            else
-            {
-                _battleGame->setReservedAction(BA_NONE);
-            }
-        }
-    }
 		if (action->getDetails()->button.button == SDL_BUTTON_LEFT) {
 			ev.type = SDL_MOUSEBUTTONDOWN;
 			ev.button.button = SDL_BUTTON_LEFT;
