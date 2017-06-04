@@ -896,7 +896,7 @@ bool Pathfinding::previewPath(bool bRemove)
 	int total = _unit->isKneeled() ? 8 : 0;
 	bool switchBack = false;
     // FIXME: Is ERF check required? What about the check whether the faction is alien?
-    if (_save->getBattleGame()->getReservedAction() == BA_NONE && (!Options::extendedReactionFire || _unit->getReservedAction() == BA_NONE || _unit->getFaction() != FACTION_PLAYER))
+	if (_save->getBattleGame()->getReservedAction() == BA_NONE && (!Options::extendedReactionFire || _unit->getReservedAction() == BA_NONE || _unit->getFaction() != FACTION_PLAYER))
 	{
 		switchBack = true;
 		_save->getBattleGame()->setTUReserved(BA_AUTOSHOT);

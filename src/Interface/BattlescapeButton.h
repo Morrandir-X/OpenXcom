@@ -59,7 +59,7 @@ public:
 	/// Invert a button explicitly either ON or OFF.
 	void toggle(bool invert);
     /// Toggle selected either ON or OFF (Extended Reaction Fire, reaction button).
-    void toggleSelected(bool select);
+	void toggleSelected(bool select);
 	/// Allows this button to be toggled on/off with a click.
 	void allowToggleInversion();
 	/// Allows this button to be toggled on when clicked, and off when released.

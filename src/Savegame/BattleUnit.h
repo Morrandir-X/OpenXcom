@@ -240,10 +240,10 @@ public:
 	bool isKneeled() const;
 	/// Is floating?
 	bool isFloating() const;
-    /// Get the reserved action.
-    BattleActionType getReservedAction() const;
-    /// Set action for which the individual unit reserves TUs
-    void reserveAction(BattleActionType type);
+	/// Get the reserved action.
+	BattleActionType getReservedAction() const;
+	/// Set action for which the individual unit reserves TUs
+	void reserveAction(BattleActionType type);
 	/// Aim.
 	void aim(bool aiming);
 	/// Get direction to a certain point

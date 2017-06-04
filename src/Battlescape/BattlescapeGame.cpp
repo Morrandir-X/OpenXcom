@@ -1367,19 +1367,19 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
     
     cost.updateTU();
     
-    // Check if Extended Reaction Fire is enabled and if so, choose whichever option takes more TUs.
-    // Only check if individual selection is made and is different from the general.
-    if (Options::extendedReactionFire && bu->getReservedAction() != BA_NONE && bu->getReservedAction() != cost.type)
-    {
-        BattleActionCost altCost = cost;
-        altCost.type = bu->getReservedAction();
-        altCost.updateTU();
-        if (altCost.Time - cost.Time > 0)
-        {
-            cost.type = altCost.type;
-            cost.updateTU();
-        }
-    }
+	// Check if Extended Reaction Fire is enabled and if so, choose whichever option takes more TUs.
+	// Only check if individual selection is made and is different from the general.
+	if (Options::extendedReactionFire && bu->getReservedAction() != BA_NONE && bu->getReservedAction() != cost.type)
+	{
+		BattleActionCost altCost = cost;
+		altCost.type = bu->getReservedAction();
+		altCost.updateTU();
+		if (altCost.Time - cost.Time > 0)
+		{
+			cost.type = altCost.type;
+			cost.updateTU();
+		}
+	}
 
 	// if the weapon has no autoshot, reserve TUs for snapshot
 	if (cost.Time == 0 && cost.type == BA_AUTOSHOT)
@@ -1489,7 +1489,6 @@ bool BattlescapeGame::handlePanickingUnit(BattleUnit *unit)
 			game->pushState(new InfoboxState(game->getLanguage()->getString("STR_HAS_GONE_BERSERK", unit->getGender()).arg(unit->getName(game->getLanguage()))));
 		}
 	}
-
 
 	int flee = RNG::generate(0,100);
 	BattleAction ba;
@@ -1926,7 +1925,7 @@ void BattlescapeGame::setTUReserved(BattleActionType tur)
  */
 void BattlescapeGame::setReservedAction(BattleActionType type)
 {
-    _save->getSelectedUnit()->reserveAction(type);
+	_save->getSelectedUnit()->reserveAction(type);
 }
 
 /**
@@ -2076,7 +2075,6 @@ Mod *BattlescapeGame::getMod()
 {
 	return _parentState->getGame()->getMod();
 }
-
 
 /**
  * Tries to find an item and pick it up if possible.

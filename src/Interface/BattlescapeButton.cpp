@@ -203,7 +203,7 @@ void BattlescapeButton::initSurfaces()
 	delete _altSurfaceInvSel;
 	_altSurfaceInvSel = new Surface(_surface->w, _surface->h, _x, _y); // For selected and inverted reserve button
 	_altSurfaceInvSel->setPalette(getPalette());
-
+	
 	// Lock the surface
 	_altSurface->lock();
 	_altSurfaceSel->lock();
@@ -276,7 +276,7 @@ void BattlescapeButton::initSurfaces()
 			}
 		}
 	}
-
+	
 	// Unlock the surface
 	_altSurface->unlock();
 	_altSurfaceSel->unlock();
