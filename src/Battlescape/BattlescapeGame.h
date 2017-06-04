@@ -193,9 +193,9 @@ public:
 	void requestEndTurn(bool askForConfirmation);
 	/// Sets the TU reserved type.
 	void setTUReserved(BattleActionType tur);
-    /// Sets the reserved action type.
+	/// Sets the reserved action type.
 	void setReservedAction(BattleActionType type);
-    /// Sets up the cursor taking into account the action.
+	/// Sets up the cursor taking into account the action.
 	void setupCursor();
 	/// Gets the map.
 	Map *getMap();

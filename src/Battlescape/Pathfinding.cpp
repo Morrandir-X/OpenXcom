@@ -895,7 +895,7 @@ bool Pathfinding::previewPath(bool bRemove)
 	int size = _unit->getArmor()->getSize() - 1;
 	int total = _unit->isKneeled() ? 8 : 0;
 	bool switchBack = false;
-    // FIXME: Is ERF check required? What about the check whether the faction is alien?
+	// FIXME: Is ERF check required? What about the check whether the faction is alien?
 	if (_save->getBattleGame()->getReservedAction() == BA_NONE && (!Options::extendedReactionFire || _unit->getReservedAction() == BA_NONE || _unit->getFaction() != FACTION_PLAYER))
 	{
 		switchBack = true;

@@ -423,28 +423,28 @@ BattlescapeState::BattlescapeState() : _reserve(0), _select(0), _firstInit(true)
 	_btnRightHandItem->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
 
 	_btnReserveNone->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick);
-    _btnReserveNone->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
+	_btnReserveNone->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
 	_btnReserveNone->onKeyboardPress((ActionHandler)&BattlescapeState::btnReserveClick, Options::keyBattleReserveNone);
 	_btnReserveNone->setTooltip("STR_DONT_RESERVE_TIME_UNITS");
 	_btnReserveNone->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
 	_btnReserveNone->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
 
 	_btnReserveSnap->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick);
-    _btnReserveSnap->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
+	_btnReserveSnap->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
 	_btnReserveSnap->onKeyboardPress((ActionHandler)&BattlescapeState::btnReserveClick, Options::keyBattleReserveSnap);
 	_btnReserveSnap->setTooltip("STR_RESERVE_TIME_UNITS_FOR_SNAP_SHOT");
 	_btnReserveSnap->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
 	_btnReserveSnap->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
 
 	_btnReserveAimed->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick);
-    _btnReserveAimed->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
+	_btnReserveAimed->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
 	_btnReserveAimed->onKeyboardPress((ActionHandler)&BattlescapeState::btnReserveClick, Options::keyBattleReserveAimed);
 	_btnReserveAimed->setTooltip("STR_RESERVE_TIME_UNITS_FOR_AIMED_SHOT");
 	_btnReserveAimed->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
 	_btnReserveAimed->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
 
 	_btnReserveAuto->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick);
-    _btnReserveAuto->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
+	_btnReserveAuto->onMouseClick((ActionHandler)&BattlescapeState::btnReserveClick, SDL_BUTTON_RIGHT);
 	_btnReserveAuto->onKeyboardPress((ActionHandler)&BattlescapeState::btnReserveClick, Options::keyBattleReserveAuto);
 	_btnReserveAuto->setTooltip("STR_RESERVE_TIME_UNITS_FOR_AUTO_SHOT");
 	_btnReserveAuto->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
@@ -530,6 +530,11 @@ BattlescapeState::BattlescapeState() : _reserve(0), _select(0), _firstInit(true)
     _btnReserveSnap->setGroupSelected(&_select);
     _btnReserveAimed->setGroupSelected(&_select);
     _btnReserveAuto->setGroupSelected(&_select);
+
+	_btnReserveNone->setGroupSelected(&_select);
+	_btnReserveSnap->setGroupSelected(&_select);
+	_btnReserveAimed->setGroupSelected(&_select);
+	_btnReserveAuto->setGroupSelected(&_select);
 
 	// Set music
 	if (_save->getMusic() == "")
@@ -633,6 +638,25 @@ void BattlescapeState::init()
         _btnReserveNone->toggleSelected(true);
         break;
     }
+	switch(_save->getSelectedUnit()->getReservedAction())
+	{
+	case BA_SNAPSHOT:
+		_select = _btnReserveSnap;
+		_btnReserveSnap->toggleSelected(true);
+		break;
+	case BA_AUTOSHOT:
+		_select = _btnReserveAuto;
+		_btnReserveAuto->toggleSelected(true);
+		break;
+	case BA_AIMEDSHOT:
+		_select = _btnReserveAimed;
+		_btnReserveAimed->toggleSelected(true);
+		break;
+	default:
+		_select = _btnReserveNone;
+		_btnReserveNone->toggleSelected(true);
+		break;
+	}
 	if (_firstInit && playableUnitSelected())
 	{
 		_battleGame->setupCursor();
@@ -1005,6 +1029,10 @@ void BattlescapeState::toggleReserveActionButton(BattleUnit* unit)
     _btnReserveAuto->toggleSelected(unit->getReservedAction() == BA_AUTOSHOT);
     _btnReserveAimed->toggleSelected(unit->getReservedAction() == BA_AIMEDSHOT);
     _btnReserveNone->toggleSelected(unit->getReservedAction() == BA_NONE);
+	_btnReserveSnap->toggleSelected(unit->getReservedAction() == BA_SNAPSHOT);
+	_btnReserveAuto->toggleSelected(unit->getReservedAction() == BA_AUTOSHOT);
+	_btnReserveAimed->toggleSelected(unit->getReservedAction() == BA_AIMEDSHOT);
+	_btnReserveNone->toggleSelected(unit->getReservedAction() == BA_NONE);
 }
 
 void BattlescapeState::toggleKneelButton(BattleUnit* unit)
@@ -1411,6 +1439,63 @@ void BattlescapeState::btnReserveClick(Action *action)
             }
         }
     }
+		if (action->getDetails()->button.button == SDL_BUTTON_LEFT) {
+			ev.type = SDL_MOUSEBUTTONDOWN;
+			ev.button.button = SDL_BUTTON_LEFT;
+			Action a = Action(&ev, 0.0, 0.0, 0, 0);
+			action->getSender()->mousePress(&a, this);
+			
+			if (_reserve == _btnReserveNone)
+				_battleGame->setTUReserved(BA_NONE);
+			else if (_reserve == _btnReserveSnap)
+				_battleGame->setTUReserved(BA_SNAPSHOT);
+			else if (_reserve == _btnReserveAimed)
+				_battleGame->setTUReserved(BA_AIMEDSHOT);
+			else if (_reserve == _btnReserveAuto)
+				_battleGame->setTUReserved(BA_AUTOSHOT);
+			
+			// update any path preview
+			if (_battleGame->getPathfinding()->isPathPreviewed())
+			{
+				_battleGame->getPathfinding()->removePreview();
+				_battleGame->getPathfinding()->previewPath();
+			}
+		}
+		
+		// If Extended Reaction Fire is enabled, process right button click.
+		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+		{
+			ev.type = SDL_MOUSEBUTTONDOWN;
+			ev.button.button = SDL_BUTTON_RIGHT;
+			Action a = Action(&ev, 0.0, 0.0, 0, 0);
+			action->getSender()->mousePress(&a, this);
+			
+			if (Options::extendedReactionFire)
+			{
+				if (_select == _btnReserveNone)
+					_battleGame->setReservedAction(BA_NONE);
+				else if (_select == _btnReserveSnap)
+					_battleGame->setReservedAction(BA_SNAPSHOT);
+				else if (_select == _btnReserveAuto)
+					_battleGame->setReservedAction(BA_AUTOSHOT);
+				else if (_select == _btnReserveAimed)
+					_battleGame->setReservedAction(BA_AIMEDSHOT);
+				
+				toggleReserveActionButton(_save->getSelectedUnit());
+				
+				// update any path preview
+				if (_battleGame->getPathfinding()->isPathPreviewed())
+				{
+					_battleGame->getPathfinding()->removePreview();
+					_battleGame->getPathfinding()->previewPath();
+				}
+			}
+			else
+			{
+				_battleGame->setReservedAction(BA_NONE);
+			}
+		}
+	}
 }
 
 /**
@@ -2977,7 +3062,6 @@ void BattlescapeState::resize(int &dX, int &dY)
 			(*i)->setX((*i)->getX() + dX);
 		}
 	}
-
 }
 
 /**

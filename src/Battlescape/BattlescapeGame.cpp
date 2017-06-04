@@ -1364,9 +1364,9 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
 		}
 		return cost.haveTU();
 	}
-    
-    cost.updateTU();
-    
+
+	cost.updateTU();
+
 	// Check if Extended Reaction Fire is enabled and if so, choose whichever option takes more TUs.
 	// Only check if individual selection is made and is different from the general.
 	if (Options::extendedReactionFire && bu->getReservedAction() != BA_NONE && bu->getReservedAction() != cost.type)
@@ -1397,14 +1397,14 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
 	// no aimed shot available? revert to none.
 	if (cost.Time == 0 && cost.type == BA_AIMEDSHOT)
 	{
-        if (tuKneel > 0)
-        {
-            cost.type = BA_NONE;
-        }
-        else
-        {
-            return true;
-        }
+		if (tuKneel > 0)
+		{
+			cost.type = BA_NONE;
+		}
+		else
+		{
+			return true;
+		}
 	}
 
 	cost.Time += tuKneel;
@@ -1422,31 +1422,31 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
 	{
 		if (!justChecking)
 		{
-            if (tuKneel)
-            {
-                if (cost.type == BA_NONE)
-                {
-                    _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING");
-                }
-                else
-                {
-                    _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING_AND_FIRING");
-                }
-            }
-            else
-            {
-                switch(cost.type)
-                {
-                    case BA_SNAPSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_SNAP_SHOT"); break;
-                    case BA_AUTOSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AUTO_SHOT"); break;
-                    case BA_AIMEDSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AIMED_SHOT"); break;
-                    default: ;
-                }
-            }
+			if (tuKneel)
+			{
+				if (cost.type == BA_NONE)
+				{
+					_parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING");
+				}
+				else
+				{
+					_parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING_AND_FIRING");
+				}
+			}
+			else
+			{
+				switch(cost.type)
+				{
+					case BA_SNAPSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_SNAP_SHOT"); break;
+					case BA_AUTOSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AUTO_SHOT"); break;
+					case BA_AIMEDSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AIMED_SHOT"); break;
+					default: ;
+				}
+			}
 		}
 		return false;
 	}
-
+	
 	return true;
 }
 

@@ -94,7 +94,7 @@ private:
 	std::unordered_set<Tile *> _visibleTilesLookup;
 	int _tu, _energy, _health, _morale, _stunlevel;
 	bool _kneeled, _floating, _dontReselect;
-    BattleActionType _reservedAction;
+	BattleActionType _reservedAction;
 	int _currentArmor[SIDE_MAX], _maxArmor[SIDE_MAX];
 	int _fatalWounds[BODYPART_MAX];
 	int _fire;
