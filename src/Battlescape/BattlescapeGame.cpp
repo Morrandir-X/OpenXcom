@@ -1339,7 +1339,7 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
 	cost.actor = bu;
 	cost.type = _save->getTUReserved(); // avoid changing _tuReserved in this method
 	cost.weapon = bu->getMainHandWeapon(false); // check TUs against slowest weapon if we have two weapons
-
+    
 	if (_save->getSide() != bu->getFaction() || _save->getSide() == FACTION_NEUTRAL)
 	{
 		return tu <= bu->getTimeUnits();
@@ -1366,6 +1366,21 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
 	}
 
 	cost.updateTU();
+
+	// Check if Extended Reaction Fire is enabled and if so, choose whichever option takes more TUs.
+	// Only check if individual selection is made and is different from the general.
+	if (Options::extendedReactionFire && bu->getReservedAction() != BA_NONE && bu->getReservedAction() != cost.type)
+	{
+		BattleActionCost altCost = cost;
+		altCost.type = bu->getReservedAction();
+		altCost.updateTU();
+		if (altCost.Time - cost.Time > 0)
+		{
+			cost.type = altCost.type;
+			cost.updateTU();
+		}
+	}
+
 	// if the weapon has no autoshot, reserve TUs for snapshot
 	if (cost.Time == 0 && cost.type == BA_AUTOSHOT)
 	{
@@ -1384,7 +1399,7 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
 	{
 		if (tuKneel > 0)
 		{
-			cost.type = BA_KNEEL;
+			cost.type = BA_NONE;
 		}
 		else
 		{
@@ -1409,30 +1424,31 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, int energy, bool j
 		{
 			if (tuKneel)
 			{
-				switch (cost.type)
+				if (cost.type == BA_NONE)
 				{
-				case BA_KNEEL: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING"); break;
-				default: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING_AND_FIRING");
+					_parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING");
+				}
+				else
+				{
+					_parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING_AND_FIRING");
 				}
 			}
 			else
 			{
-				switch (_save->getTUReserved())
+				switch(cost.type)
 				{
-				case BA_SNAPSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_SNAP_SHOT"); break;
-				case BA_AUTOSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AUTO_SHOT"); break;
-				case BA_AIMEDSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AIMED_SHOT"); break;
-				default: ;
+					case BA_SNAPSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_SNAP_SHOT"); break;
+					case BA_AUTOSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AUTO_SHOT"); break;
+					case BA_AIMEDSHOT: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_AIMED_SHOT"); break;
+					default: ;
 				}
 			}
 		}
 		return false;
 	}
-
+	
 	return true;
 }
-
-
 
 /**
  * Picks the first soldier that is panicking.
@@ -1473,7 +1489,6 @@ bool BattlescapeGame::handlePanickingUnit(BattleUnit *unit)
 			game->pushState(new InfoboxState(game->getLanguage()->getString("STR_HAS_GONE_BERSERK", unit->getGender()).arg(unit->getName(game->getLanguage()))));
 		}
 	}
-
 
 	int flee = RNG::generate(0,100);
 	BattleAction ba;
@@ -1895,13 +1910,22 @@ void BattlescapeGame::requestEndTurn(bool askForConfirmation)
 }
 
 /**
- * Sets the TU reserved type.
+ * Sets the TU reserved type. (General!)
  * @param tur A battleactiontype.
  * @param player is this requested by the player?
  */
 void BattlescapeGame::setTUReserved(BattleActionType tur)
 {
 	_save->setTUReserved(tur);
+}
+    
+/**
+ * Sets the reserved action type for the selected unit. (Individual!)
+ * @param type Reserved battleactiontype.
+ */
+void BattlescapeGame::setReservedAction(BattleActionType type)
+{
+	_save->getSelectedUnit()->reserveAction(type);
 }
 
 /**
@@ -2051,7 +2075,6 @@ Mod *BattlescapeGame::getMod()
 {
 	return _parentState->getGame()->getMod();
 }
-
 
 /**
  * Tries to find an item and pick it up if possible.
@@ -2371,7 +2394,7 @@ bool BattlescapeGame::takeItem(BattleItem* item, BattleAction *action)
 }
 
 /**
- * Returns the action type that is reserved.
+ * Returns the action type that is reserved. (General!)
  * @return The type of action that is reserved.
  */
 BattleActionType BattlescapeGame::getReservedAction()

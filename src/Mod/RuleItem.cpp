@@ -1368,6 +1368,22 @@ bool RuleItem::isExplodingInHands() const
 {
 	return _isExplodingInHands;
 }
+	
+/**
+ *
+ *
+ */
+bool RuleItem::canReact(int type) const
+{
+	switch (type)
+	{
+		case 7: return _canReactAuto;
+		case 8: return _canReactSnap;
+		case 9: return _canReactAimed;
+		case 10: return _canReactMelee;
+		default: return false;
+	}
+}
     
 /**
  * Can this item be used for reactions with aimed shot?

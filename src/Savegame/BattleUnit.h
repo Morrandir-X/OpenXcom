@@ -94,6 +94,7 @@ private:
 	std::unordered_set<Tile *> _visibleTilesLookup;
 	int _tu, _energy, _health, _morale, _stunlevel;
 	bool _kneeled, _floating, _dontReselect;
+	BattleActionType _reservedAction;
 	int _currentArmor[SIDE_MAX], _maxArmor[SIDE_MAX];
 	int _fatalWounds[BODYPART_MAX];
 	int _fire;
@@ -239,6 +240,10 @@ public:
 	bool isKneeled() const;
 	/// Is floating?
 	bool isFloating() const;
+	/// Get the reserved action.
+	BattleActionType getReservedAction() const;
+	/// Set action for which the individual unit reserves TUs
+	void reserveAction(BattleActionType type);
 	/// Aim.
 	void aim(bool aiming);
 	/// Get direction to a certain point
