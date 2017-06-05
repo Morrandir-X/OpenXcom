@@ -1635,7 +1635,7 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 			weapon->getRules()->getBattleType() != BT_MELEE &&
 			weapon->getAmmoItem() &&
 			BattleActionCost(unit->getReservedAction(), unit, weapon).haveTU() &&
-			weapon->getRules()->canReact(int(actionType)) &&
+			weapon->getRules()->canReact(actionType) &&
 			// the selected shot is aimed, or auto/snap shot and within minimum auto/snap shot accuracy
 			(unit->getReservedAction() == BA_AIMEDSHOT ||
 			 (unit->getFiringAccuracy(actionType, weapon, _save->getBattleGame()->getMod()) - ((dist - upperlimit) >= 0 ? (dist - upperlimit) : (lowerlimit - dist)) * weapon->getRules()->getDropoff()) > _save->getBattleGame()->getMod()->getMinReactionAccuracy()))
