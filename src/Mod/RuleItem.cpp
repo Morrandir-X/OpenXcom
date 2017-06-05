@@ -1373,14 +1373,14 @@ bool RuleItem::isExplodingInHands() const
  *
  *
  */
-bool RuleItem::canReact(int type) const
+bool RuleItem::canReact(Uint8 type) const
 {
-	switch (type)
+	switch(type)
 	{
-		case 7: return _canReactAuto;
-		case 8: return _canReactSnap;
-		case 9: return _canReactAimed;
-		case 10: return _canReactMelee;
+		case BA_AUTOSHOT: return _canReactAuto;
+		case BA_SNAPSHOT: return _canReactSnap;
+		case BA_AIMEDSHOT: return _canReactAimed;
+		case BA_HIT: return _canReactMelee;
 		default: return false;
 	}
 }
