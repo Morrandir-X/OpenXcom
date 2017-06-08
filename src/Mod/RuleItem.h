@@ -389,7 +389,7 @@ public:
 	/// Is this item explode in hands?
 	bool isExplodingInHands() const;
 	/// Can the item be used for specified reactions?
-	bool canReact(int type) const;
+	bool canReact(Uint8 type) const;
 	/// Can the item be used for reactions with aimed shot?
 	bool canReactAimed() const;
 	/// Can the item be used for reactions with auto shot?
