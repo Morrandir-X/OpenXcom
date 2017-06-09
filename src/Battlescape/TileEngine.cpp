@@ -1640,10 +1640,7 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 		Uint8 types [2] {BA_HIT, BA_SNAPSHOT};
 		reactionTypes.assign(types, types+2);
 	}
-	{
-		printf("REACTION TYPES: %i, %i, %i, %i * \n", reactionTypes[0], reactionTypes[1], reactionTypes[2], reactionTypes[3]);
-	}
-	
+
 	bool force = true;
 	for (int i = 0; i < reactionTypes.size(); i++) {
 		// Force the shot even when inaccurate if it is manually selected (i.e. first) or is the last resort
@@ -1666,7 +1663,7 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 			return reaction;
 		}
 	}
-
+}
 	
 bool TileEngine::canReact(BattleUnit *unit, BattleUnit *target, BattleItem *weapon, BattleActionType type, bool force, bool onlyAccurate)
 {
