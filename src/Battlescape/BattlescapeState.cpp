@@ -1389,15 +1389,32 @@ void BattlescapeState::btnReserveClick(Action *action)
 			{
 				if (_select == _btnReserveNone)
 					_battleGame->setReservedAction(BA_NONE);
-				else if (_select == _btnReserveSnap)
-					_battleGame->setReservedAction(BA_SNAPSHOT);
-				else if (_select == _btnReserveAuto)
-					_battleGame->setReservedAction(BA_AUTOSHOT);
-				else if (_select == _btnReserveAimed)
-					_battleGame->setReservedAction(BA_AIMEDSHOT);
-				
+				BattleItem *weapon = _save->getSelectedUnit()->getMainHandWeapon();
+				if (weapon)
+				{
+					if (_select == _btnReserveSnap &&
+							weapon->getRules()->canReact(BA_SNAPSHOT) &&
+							weapon->getRules()->getCostSnap().Time != 0)
+						_battleGame->setReservedAction(BA_SNAPSHOT);
+					else if (_select == _btnReserveAuto &&
+							weapon->getRules()->canReact(BA_AUTOSHOT) &&
+							weapon->getRules()->getCostAuto().Time != 0)
+						_battleGame->setReservedAction(BA_AUTOSHOT);
+					else if (_select == _btnReserveAimed  &&
+							weapon->getRules()->canReact(BA_AIMEDSHOT) &&
+							weapon->getRules()->getCostAimed().Time != 0)
+						_battleGame->setReservedAction(BA_AIMEDSHOT);
+					else
+						warning("UNSUPPORTED FIRE MODE"); //FIXME: MAKE STR
+				}
+				else if (_select == _btnReserveSnap || _select == _btnReserveAuto || _select == _btnReserveAimed)
+				{
+					warning("UNSUPPORTED FIRE MODE"); //FIXME: MAKE STR
+					_battleGame->setReservedAction(BA_NONE);
+				}
+                
 				toggleReserveActionButton(_save->getSelectedUnit());
-				
+                
 				// update any path preview
 				if (_battleGame->getPathfinding()->isPathPreviewed())
 				{
