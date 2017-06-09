@@ -2526,15 +2526,15 @@ BattleItem *BattleUnit::getItem(const std::string &slot, int x, int y) const
  * @param quickest Whether to get the quickest weapon, default true
  * @return Pointer to item.
  */
-BattleItem *BattleUnit::getMainHandWeapon(bool quickest) const
+BattleItem *BattleUnit::getMainHandWeapon(bool quickest, bool ignoreEmpty) const
 {
 	BattleItem *weaponRightHand = getRightHandWeapon();
 	BattleItem *weaponLeftHand = getLeftHandWeapon();
 
-	// ignore weapons without ammo (rules out grenades)
-	if (!weaponRightHand || !weaponRightHand->getAmmoItem() || !weaponRightHand->getAmmoItem()->getAmmoQuantity())
+	// ignore weapons without ammo (rules out grenades) – boolean used to enable melee reactions with empty guns
+	if (ignoreEmpty && (!weaponRightHand || !weaponRightHand->getAmmoItem() || !weaponRightHand->getAmmoItem()->getAmmoQuantity()))
 		weaponRightHand = 0;
-	if (!weaponLeftHand || !weaponLeftHand->getAmmoItem() || !weaponLeftHand->getAmmoItem()->getAmmoQuantity())
+	if (ignoreEmpty && (!weaponLeftHand || !weaponLeftHand->getAmmoItem() || !weaponLeftHand->getAmmoItem()->getAmmoQuantity()))
 		weaponLeftHand = 0;
 
 	// if there is only one weapon, it's easy:

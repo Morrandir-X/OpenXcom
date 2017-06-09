@@ -614,7 +614,7 @@ void BattlescapeState::init()
 		_reserve = _btnReserveNone;
 		break;
 	}
-	switch(_save->getSelectedUnit()->getReservedAction())
+	switch(playableUnitSelected() ? _save->getSelectedUnit()->getReservedAction() : BA_NONE)
 	{
 	case BA_SNAPSHOT:
 		_select = _btnReserveSnap;
@@ -996,7 +996,7 @@ void BattlescapeState::btnShowMapClick(Action *)
 		_game->pushState (new MiniMapState (_map->getCamera(), _save));
 }
 /**
- * Toggles the reserve TUs button for the individual choice.
+ * Toggles the reserve TUs button for individual choice.
  * @param unit Pointer to a unit.
  */
 void BattlescapeState::toggleReserveActionButton(BattleUnit* unit)

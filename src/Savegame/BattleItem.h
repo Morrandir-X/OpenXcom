@@ -115,6 +115,7 @@ public:
 	Surface *getFloorSprite(SurfaceSet *set) const;
 	/// Gets the item's inventory sprite.
 	Surface *getBigSprite(SurfaceSet *set) const;
+    /// FIXME: Is there a reason for there being two getAmmoItem functions?
 	/// Gets the item's ammo item.
 	BattleItem *getAmmoItem();
 	/// Gets the item's ammo item.
