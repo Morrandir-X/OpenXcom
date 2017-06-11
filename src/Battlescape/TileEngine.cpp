@@ -515,6 +515,7 @@ void TileEngine::addLight(GraphSubset gs, Position center, int power, LightLayer
 	const auto offsetCenter = (accuracy / 2 + Position(-1, -1, (ground ? 0 : accuracy.z/4) - tileHeight * accuracy.z / 24));
 	const auto offsetTarget = (accuracy / 2 + Position(-1, -1, 0));
 	const auto clasicLighting = !(getEnhancedLighting() & ((fire ? 1 : 0) | (items ? 2 : 0) | (units ? 4 : 0)));
+	const auto topVoxel = (_blockVisibility[_save->getTileIndex(center)].blockUp ? (center.z + 1) : _save->getMapSizeZ()) * accuracy.z - 1;
 
 	iterateTiles(
 		_save,
@@ -555,6 +556,13 @@ void TileEngine::addLight(GraphSubset gs, Position center, int power, LightLayer
 			auto stepsB = 0;
 			auto lightA = currLight;
 			auto lightB = currLight;
+
+			if (startVoxel.z > topVoxel)
+			{
+				//Do not peek out your head outside map
+				startVoxel.z = topVoxel;
+			}
+
 			auto calculateBlock = [&](Position point, Position &lastPoint, int &light, int &steps)
 			{
 				auto height = (point.z % accuracy.z) * divide;
@@ -630,6 +638,7 @@ void TileEngine::addLight(GraphSubset gs, Position center, int power, LightLayer
 				}
 				return false;
 			};
+
 			calculateLineHitHelper(startVoxel, endVoxel,
 				[&](Position voxel)
 				{
@@ -1758,6 +1767,8 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, BattleActionT
 	action.updateTU();
 
 	if ((attackType == BA_HIT || (action.weapon->getAmmoItem() && action.weapon->getAmmoItem()->getAmmoQuantity())) && action.haveTU())
+	auto ammo = action.weapon->getAmmoForAction(attackType);
+	if (ammo && action.haveTU())
 	{
 		action.targeting = true;
 
@@ -1772,7 +1783,7 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, BattleActionT
 				unit->setAIModule(ai);
 			}
 
-			int radius = action.weapon->getAmmoItem()->getRules()->getExplosionRadius(unit);
+			int radius = ammo->getRules()->getExplosionRadius(unit);
 			if (radius > 0 &&
 				ai->explosiveEfficacy(action.target, unit, radius, -1) == 0)
 			{
@@ -2053,7 +2064,7 @@ bool TileEngine::hitUnit(BattleActionAttack attack, BattleUnit *target, const Po
 		if (type->IgnoreSelfDestruct == false)
 		{
 			Position p = Position(target->getPosition().x * 16, target->getPosition().y * 16, target->getPosition().z * 24);
-			_save->getBattleGame()->statePushNext(new ExplosionBState(_save->getBattleGame(), p, { BA_NONE, target, nullptr }, 0));
+			_save->getBattleGame()->statePushNext(new ExplosionBState(_save->getBattleGame(), p, BattleActionAttack{ BA_NONE, target, }, 0));
 		}
 	}
 
@@ -2082,6 +2093,23 @@ bool TileEngine::hitUnit(BattleActionAttack attack, BattleUnit *target, const Po
 		{
 			// bullet/ammo
 			target->setFire(0);
+		}
+	}
+
+	if (attack.attacker)
+	{
+		// Record the last unit to hit our victim. If a victim dies without warning*, this unit gets the credit.
+		// *Because the unit died in a fire or bled out.
+		target->setMurdererId(attack.attacker->getId());
+		target->setMurdererWeapon("STR_WEAPON_UNKNOWN");
+		target->setMurdererWeaponAmmo("STR_WEAPON_UNKNOWN");
+		if (attack.weapon_item)
+		{
+			target->setMurdererWeapon(attack.weapon_item->getRules()->getName());
+		}
+		if (attack.damage_item)
+		{
+			target->setMurdererWeaponAmmo(attack.damage_item->getRules()->getName());
 		}
 	}
 
@@ -3959,7 +3987,7 @@ bool TileEngine::validateThrow(BattleAction &action, Position originVoxel, Posit
 	double curvature = 0.5;
 	if (action.type == BA_THROW)
 	{
-		curvature = std::max(0.48, 1.73 / sqrt(sqrt((double)(action.actor->getBaseStats()->strength) / (double)(action.weapon->getRules()->getWeight()))) + (action.actor->isKneeled()? 0.1 : 0.0));
+		curvature = std::max(0.48, 1.73 / sqrt(sqrt((double)(action.actor->getBaseStats()->strength) / (double)(action.weapon->getTotalWeight()))) + (action.actor->isKneeled()? 0.1 : 0.0));
 	}
 	else
 	{
