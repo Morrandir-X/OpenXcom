@@ -1685,9 +1685,9 @@ bool TileEngine::canReact(BattleUnit *unit, BattleUnit *target, BattleItem *weap
 		validMeleeRange(unit, target, unit->getDirection()) : (dist <= weapon->getRules()->getMaxRange());
 	// Within valid range and with a usable weapon with enough ammon and TUs
 	if (validRange &&
-		((type == BA_HIT || weapon->getAmmoItem()) &&
+		((type == BA_HIT || weapon->haveAnyAmmo()) &&
 		BattleActionCost(type, unit, weapon).haveTU() &&
-		(type != BA_AUTOSHOT || weapon->getAmmoItem()->getAmmoQuantity() > 1)))
+		(type != BA_AUTOSHOT || weapon->getAmmoQuantity() > 1)))
 	{
 		// If it's a melee weapon, go ahead; otherwise check accuracy based on distance
 		if (type == BA_HIT)
@@ -1766,9 +1766,8 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, BattleActionT
 	action.target = target->getPosition();
 	action.updateTU();
 
-	if ((attackType == BA_HIT || (action.weapon->getAmmoItem() && action.weapon->getAmmoItem()->getAmmoQuantity())) && action.haveTU())
 	auto ammo = action.weapon->getAmmoForAction(attackType);
-	if (ammo && action.haveTU())
+	if (attackType == BA_HIT || (ammo && action.haveTU()))
 	{
 		action.targeting = true;
 
