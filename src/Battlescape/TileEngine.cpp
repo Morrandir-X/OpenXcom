@@ -1659,16 +1659,13 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 		BattleItem *currentweapon = actionType == BA_HIT ? meleeWeapon : weapon;
 		// Special case: firearm with melee capacities (gun butt). Replace melee weapon with weapon for BA_HIT check.
 		if (actionType == BA_HIT && _save->canUseWeapon(weapon, unit, false) && weapon->getRules()->getMeleeType() != 0)
-		{
 			currentweapon = weapon;
-		}
 		if (canReact(unit, target, currentweapon, actionType, force))
 		{
 			reaction.reactionScore = unit->getReactionScore(BattleActionCost(actionType, unit, currentweapon).Time);
 			reaction.attackType = actionType;
 			reaction.reactionReduction = 1.0 * BattleActionCost(actionType, unit, currentweapon).Time * unit->getBaseStats()->reactions / unit->getBaseStats()->tu;
 			if (unit->getFaction() == FACTION_PLAYER)
-				printf("\r\n *** REACTION: %hhu, reactionscore: %f *** \n\r", actionType, unit->getReactionScore(BattleActionCost(actionType, unit, currentweapon).Time));
 			return reaction;
 		}
 	}
@@ -1677,19 +1674,19 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 bool TileEngine::canReact(BattleUnit *unit, BattleUnit *target, BattleItem *weapon, BattleActionType type, bool force, bool onlyAccurate)
 {
 	if (!_save->canUseWeapon(weapon, unit, false))
-	{
 		return false;
-	}
 	int dist = distance(unit->getPosition(), target->getPosition());
 	bool validRange = type == BA_HIT ?
 		validMeleeRange(unit, target, unit->getDirection()) : (dist <= weapon->getRules()->getMaxRange());
+	// Special handling of diagonals for weapons with range of one or two
+	bool diagonal = (unit->directionTo(target->getPosition()) % 2 == 1 && ((weapon->getRules()->getMaxRange() == 1 && dist == 2) || (weapon->getRules()->getMaxRange() == 2 && dist == 3 && target->getPosition().z != unit->getPosition().z)));
 	// Within valid range and with a usable weapon with enough ammon and TUs
 	// FIXME: Check that there is enough ammo for each shot type...
-	if (validRange &&
-		((type == BA_HIT || weapon->haveAnyAmmo()) &&
+	if ((validRange || diagonal) &&
+		(type == BA_HIT || weapon->haveAnyAmmo()) &&
 		BattleActionCost(type, unit, weapon).haveTU() &&
 		 // Do not auto fire unless ammo is more than what is required for a simple snap shot (or snap shot ammo is out)
-		(type != BA_AUTOSHOT || (weapon->getAmmoForAction(BA_AUTOSHOT)->getAmmoQuantity() > weapon->getActionConf(BA_SNAPSHOT)->shots) || weapon->getAmmoForAction(BA_SNAPSHOT)->getAmmoQuantity() < weapon->getActionConf(BA_SNAPSHOT)->shots)))
+		(type != BA_AUTOSHOT || (weapon->getAmmoForAction(BA_AUTOSHOT)->getAmmoQuantity() > weapon->getActionConf(BA_SNAPSHOT)->shots) || weapon->getAmmoForAction(BA_SNAPSHOT)->getAmmoQuantity() < weapon->getActionConf(BA_SNAPSHOT)->shots))
 	{
 		// If it's a melee weapon, go ahead; otherwise check accuracy based on distance
 		if (type == BA_HIT)
@@ -1704,33 +1701,23 @@ bool TileEngine::canReact(BattleUnit *unit, BattleUnit *target, BattleItem *weap
 		// if shot accuracy is below minimum reaction accuracy, do not shoot
 		if (((accuracy - (dist - upperlimit) * weaponDropoff) <= minReactionAccuracy) ||
 			(((accuracy - (lowerlimit - dist) * weaponDropoff) <= minReactionAccuracy)))
-		{
 			return false;
-		}
-		
 		// If within accurate distance fire away
-		if (dist <= upperlimit && lowerlimit <= dist) {
+		if (dist <= upperlimit && lowerlimit <= dist)
 			return true;
-		}
 		// Tough one: we could shoot, but not accurately. Check if another shot would be better.
 		else if (!onlyAccurate)
 		{
 			// First, if selected by player or last chance, force the shot
 			if (force)
-			{
 				return true;
-			}
 			// Then see if aimed would be better than snap or snap/aimed better than auto shot, if so, don't shoot
 			if((type == BA_AUTOSHOT && (canReact(unit, target, weapon, BA_SNAPSHOT, false, true) || canReact(unit, target, weapon, BA_AIMEDSHOT, false, true))) ||
 			   (type == BA_SNAPSHOT && (canReact(unit, target, weapon, BA_AIMEDSHOT, false, true))))
-			{
 				return false;
-			}
 			// Another shot is not possible with full accuracy, so take this one
 			else
-			{
 				return true;
-			}
 		}
 	}
 	return false;

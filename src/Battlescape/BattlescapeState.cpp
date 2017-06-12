@@ -1403,7 +1403,7 @@ void BattlescapeState::btnReserveClick(Action *action)
 				{
 					if (_select == _btnReserveNone)
 						_battleGame->setReservedAction(BA_NONE);
-					if (_select == _btnReserveSnap &&
+					else if (_select == _btnReserveSnap &&
 							weapon->getRules()->canReact(BA_SNAPSHOT) &&
 							weapon->getRules()->getCostSnap().Time != 0)
 						_battleGame->setReservedAction(BA_SNAPSHOT);
