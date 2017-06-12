@@ -1642,7 +1642,7 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 			// has a weapon capable of given reaction with ammo and within accurate range
 			dist <= weapon->getRules()->getMaxRange() &&
 			weapon->getRules()->getBattleType() != BT_MELEE &&
-			weapon->getAmmoItem() &&
+			weapon->haveAnyAmmo() &&
 			BattleActionCost(unit->getReservedAction(), unit, weapon).haveTU() &&
 			weapon->getRules()->canReact(actionType) &&
 			// the selected shot is aimed, or auto/snap shot and within minimum auto/snap shot accuracy
@@ -1684,7 +1684,7 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 		  (!Options::extendedReactionFire || meleeWeapon->getRules()->canReactMelee())) ||
 		 // has a gun capable of auto reaction shot with ammo
 		 (weapon->getRules()->getBattleType() != BT_MELEE &&
-		  weapon->getAmmoItem() &&
+		  weapon->haveAnyAmmo() &&
 		  BattleActionCost(BA_AUTOSHOT, unit, weapon).haveTU() &&
 		  weapon->getRules()->canReactAuto() &&
 		  // and is within accurate auto shot range or is only capable of auto reaction shot
