@@ -2531,17 +2531,10 @@ BattleItem *BattleUnit::getMainHandWeapon(bool quickest, bool ignoreEmpty) const
 	BattleItem *weaponRightHand = getRightHandWeapon();
 	BattleItem *weaponLeftHand = getLeftHandWeapon();
 
-<<<<<<< HEAD
 	// ignore weapons without ammo (rules out grenades) – boolean used to enable melee reactions with empty guns
-	if (ignoreEmpty && (!weaponRightHand || !weaponRightHand->getAmmoItem() || !weaponRightHand->getAmmoItem()->getAmmoQuantity()))
+	if (ignoreEmpty && (!weaponRightHand || !weaponRightHand->haveAnyAmmo()))
 		weaponRightHand = 0;
-	if (ignoreEmpty && (!weaponLeftHand || !weaponLeftHand->getAmmoItem() || !weaponLeftHand->getAmmoItem()->getAmmoQuantity()))
-=======
-	// ignore weapons without ammo (rules out grenades)
-	if (!weaponRightHand || !weaponRightHand->haveAnyAmmo())
-		weaponRightHand = 0;
-	if (!weaponLeftHand || !weaponLeftHand->haveAnyAmmo())
->>>>>>> e18dd86415f3090aee0e03410ff74bb65502c05b
+	if (ignoreEmpty && (!weaponLeftHand || !weaponLeftHand->haveAnyAmmo()))
 		weaponLeftHand = 0;
 
 	// if there is only one weapon, it's easy:

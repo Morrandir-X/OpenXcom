@@ -1398,11 +1398,11 @@ void BattlescapeState::btnReserveClick(Action *action)
 			
 			if (Options::extendedReactionFire)
 			{
-				if (_select == _btnReserveNone)
-					_battleGame->setReservedAction(BA_NONE);
 				BattleItem *weapon = _save->getSelectedUnit()->getMainHandWeapon();
 				if (weapon)
 				{
+					if (_select == _btnReserveNone)
+						_battleGame->setReservedAction(BA_NONE);
 					if (_select == _btnReserveSnap &&
 							weapon->getRules()->canReact(BA_SNAPSHOT) &&
 							weapon->getRules()->getCostSnap().Time != 0)
@@ -1423,7 +1423,9 @@ void BattlescapeState::btnReserveClick(Action *action)
 					warning("UNSUPPORTED FIRE MODE"); //FIXME: MAKE STR
 					_battleGame->setReservedAction(BA_NONE);
 				}
-                
+				else if (_select == _btnReserveNone)
+					_battleGame->setReservedAction(BA_NONE);
+				
 				toggleReserveActionButton(_save->getSelectedUnit());
                 
 				// update any path preview

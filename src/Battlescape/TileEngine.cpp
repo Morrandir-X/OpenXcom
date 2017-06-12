@@ -1684,10 +1684,12 @@ bool TileEngine::canReact(BattleUnit *unit, BattleUnit *target, BattleItem *weap
 	bool validRange = type == BA_HIT ?
 		validMeleeRange(unit, target, unit->getDirection()) : (dist <= weapon->getRules()->getMaxRange());
 	// Within valid range and with a usable weapon with enough ammon and TUs
+	// FIXME: Check that there is enough ammo for each shot type...
 	if (validRange &&
 		((type == BA_HIT || weapon->haveAnyAmmo()) &&
 		BattleActionCost(type, unit, weapon).haveTU() &&
-		(type != BA_AUTOSHOT || weapon->getAmmoQuantity() > 1)))
+		 // Do not auto fire unless ammo is more than what is required for a simple snap shot (or snap shot ammo is out)
+		(type != BA_AUTOSHOT || (weapon->getAmmoForAction(BA_AUTOSHOT)->getAmmoQuantity() > weapon->getActionConf(BA_SNAPSHOT)->shots) || weapon->getAmmoForAction(BA_SNAPSHOT)->getAmmoQuantity() < weapon->getActionConf(BA_SNAPSHOT)->shots)))
 	{
 		// If it's a melee weapon, go ahead; otherwise check accuracy based on distance
 		if (type == BA_HIT)
@@ -1767,7 +1769,7 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, BattleActionT
 	action.updateTU();
 
 	auto ammo = action.weapon->getAmmoForAction(attackType);
-	if (attackType == BA_HIT || (ammo && action.haveTU()))
+	if ((attackType == BA_HIT || ammo) && action.haveTU())
 	{
 		action.targeting = true;
 
