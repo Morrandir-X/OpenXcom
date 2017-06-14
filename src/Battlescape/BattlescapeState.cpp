@@ -1021,6 +1021,8 @@ void BattlescapeState::toggleReserveActionButton(BattleUnit* unit)
 {
 	BattleActionType selected = unit->getReservedAction();
 	bool exclusive = unit->getExclusivity();
+	BattleActionType selected = Options::extendedReactionFire ? unit->getReservedAction() : BA_NONE;
+	bool exclusive = Options::extendedReactionFire ? unit->getExclusivity() : false;
 	_btnReserveSnap->toggleSelected(selected == BA_SNAPSHOT, exclusive);
 	_btnReserveAuto->toggleSelected(selected == BA_AUTOSHOT, exclusive);
 	_btnReserveAimed->toggleSelected(selected == BA_AIMEDSHOT, exclusive);
@@ -1448,7 +1450,7 @@ void BattlescapeState::btnReserveClick(Action *action)
 			}
 			else
 			{
-				_battleGame->setReservedAction(BA_NONE);
+				_battleGame->setReservedAction(BA_NONE, false);
 			}
 		}
 	}

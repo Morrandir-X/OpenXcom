@@ -76,7 +76,7 @@ void BattlescapeButton::setGroup(BattlescapeButton **group)
 }
 	
 /**
- * Changes the button group this battlescape button belongs to, for general TU reservation.
+ * Changes the button group this battlescape button belongs to, for individually selected reaction shot type.
  * @param group Pointer to the pressed button pointer in the group.
  * Null makes it a regular button.
  */
@@ -170,13 +170,13 @@ void BattlescapeButton::toggle(bool press)
 }
 	
 /**
- * Toggling reserve TU button for individual selection either ON or OFF and keep track of the state using our internal variables.
+ * Toggling reserve TU button for individual reaction fire type selection either ON or OFF and keep track of the state using our internal variables.
  * @param press Set this button as pressed.
  */
 void BattlescapeButton::toggleSelected(bool press, bool exclusive)
 {
 	Options::extendedReactionFire ? _selected = press : _selected = false;
-	_excluded = press ? false : exclusive;
+	_excluded = (_selected || !Options::extendedReactionFire) ? false : exclusive;
 }
 	
 /**
@@ -277,7 +277,6 @@ void BattlescapeButton::initSurfaces()
 		}
 		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
 		{
-			Uint8 pixel = getPixel(x, y);
 			if (x > 1 && x < getWidth() - 1 && y > 1 && y < getHeight() - 1)
 				_altSurfaceEx->setPixelIterative(&x, &y, 34 + 2 * ((int)_color + 1 - 34));
 			else
@@ -299,30 +298,16 @@ void BattlescapeButton::initSurfaces()
  */
 void BattlescapeButton::blit(Surface *surface)
 {
-	if (_inverted && !_selected)
-	{
+	if (_inverted && (!Options::extendedReactionFire || !_selected))
 		_altSurface->blit(surface);
-		if (_excluded)
-			_altSurfaceEx->blit(surface);
-	}
-	else if (!_inverted && _selected)
-	{
+	else if (Options::extendedReactionFire && !_inverted && _selected)
 		_altSurfaceSel->blit(surface);
-		if (_excluded)
-			_altSurfaceEx->blit(surface);
-	}
-	else if (_inverted && _selected)
-	{
+	else if (Options::extendedReactionFire && _inverted && _selected)
 		_altSurfaceInvSel->blit(surface);
-		if (_excluded)
-			_altSurfaceEx->blit(surface);
-	}
 	else
-	{
 		Surface::blit(surface);
-		if (_excluded)
-			_altSurfaceEx->blit(surface);
-	}
+	if (Options::extendedReactionFire && _excluded)
+		_altSurfaceEx->blit(surface);
 }
 
 /**

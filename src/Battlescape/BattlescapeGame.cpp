@@ -1874,7 +1874,7 @@ void BattlescapeGame::requestEndTurn(bool askForConfirmation)
 }
 
 /**
- * Sets the TU reserved type. (General!)
+ * Sets the TU reserved type.
  * @param tur A battleactiontype.
  * @param player is this requested by the player?
  */
@@ -1884,7 +1884,7 @@ void BattlescapeGame::setTUReserved(BattleActionType tur)
 }
     
 /**
- * Sets the reserved action type for the selected unit. (Individual!)
+ * Sets the reserved action type for reaction for the selected unit.
  * @param type Reserved battleactiontype.
  */
 void BattlescapeGame::setReservedAction(BattleActionType type, bool exclusive)
