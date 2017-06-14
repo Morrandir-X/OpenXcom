@@ -1887,11 +1887,12 @@ void BattlescapeGame::setTUReserved(BattleActionType tur)
  * Sets the reserved action type for the selected unit. (Individual!)
  * @param type Reserved battleactiontype.
  */
-void BattlescapeGame::setReservedAction(BattleActionType type)
+void BattlescapeGame::setReservedAction(BattleActionType type, bool exclusive)
 {
 	_save->getSelectedUnit()->reserveAction(type);
+	_save->getSelectedUnit()->exclusiveReservation(exclusive);
 }
-
+	
 /**
  * Drops an item to the floor and affects it with gravity.
  * @param position Position to spawn the item.

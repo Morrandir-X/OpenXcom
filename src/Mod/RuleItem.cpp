@@ -1537,9 +1537,14 @@ bool RuleItem::canReact(Uint8 type) const
  * Gets the reaction types available for this weapon.
  * @return Vector of all available types.
  */
-std::vector<Uint8> RuleItem::getReactionTypes(Uint8 selected) const
+std::vector<Uint8> RuleItem::getReactionTypes(Uint8 selected, bool exclusive) const
 {
 	std::vector<Uint8> types;
+	if (exclusive)
+	{
+		types.push_back(selected);
+		return types;
+	}
 	if (_canReactMelee)
 		types.push_back(BA_HIT);
 	if (_canReactAuto)

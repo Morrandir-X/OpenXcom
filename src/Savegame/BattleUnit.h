@@ -95,6 +95,7 @@ private:
 	int _tu, _energy, _health, _morale, _stunlevel;
 	bool _kneeled, _floating, _dontReselect;
 	BattleActionType _reservedAction;
+	bool _exclusiveReservation;
 	int _currentArmor[SIDE_MAX], _maxArmor[SIDE_MAX];
 	int _fatalWounds[BODYPART_MAX];
 	int _fire;
@@ -244,6 +245,10 @@ public:
 	BattleActionType getReservedAction() const;
 	/// Set action for which the individual unit reserves TUs
 	void reserveAction(BattleActionType type);
+	/// Get whether reserved action is exclusive.
+	bool getExclusivity() const;
+	/// Set whether reserved action is exclusive.
+	void exclusiveReservation(bool excluding);
 	/// Aim.
 	void aim(bool aiming);
 	/// Get direction to a certain point

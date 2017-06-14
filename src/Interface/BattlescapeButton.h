@@ -36,9 +36,9 @@ class BattlescapeButton : public InteractiveSurface
 protected:
 	Uint8 _color;
 	BattlescapeButton **_group, **_groupSelected;
-	bool _inverted, _selected;
+	bool _inverted, _selected, _excluded;
 	InversionType _toggleMode;
-	Surface *_altSurface, *_altSurfaceSel, *_altSurfaceInvSel;
+	Surface *_altSurface, *_altSurfaceSel, *_altSurfaceInvSel, *_altSurfaceEx;
 public:
 	/// Creates a new image button with the specified size and position.
 	BattlescapeButton(int width, int height, int x = 0, int y = 0);
@@ -50,7 +50,7 @@ public:
 	Uint8 getColor() const;
 	/// Sets the image button's group.
 	void setGroup(BattlescapeButton **group);
-	/// Sets the image button's group for _selected.
+	/// Sets the image button's group for selected.
 	void setGroupSelected(BattlescapeButton **groupSelected);
 	/// Special handling for mouse presses.
 	void mousePress(Action *action, State *state);
@@ -58,8 +58,10 @@ public:
 	void mouseRelease(Action *action, State *state);
 	/// Invert a button explicitly either ON or OFF.
 	void toggle(bool invert);
-	/// Toggle selected either ON or OFF (Extended Reaction Fire, reaction button).
-	void toggleSelected(bool select);
+	/// Toggle selected either ON or OFF, exclusively or not (Extended Reaction Fire).
+	void toggleSelected(bool select, bool exclusive = false);
+	/// Toggle whether fire mode is excluded (Extended Reaction Fire)
+	void exclude(bool exclude);
 	/// Allows this button to be toggled on/off with a click.
 	void allowToggleInversion();
 	/// Allows this button to be toggled on when clicked, and off when released.

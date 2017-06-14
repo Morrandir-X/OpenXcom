@@ -56,7 +56,7 @@ namespace OpenXcom
 BattleUnit::BattleUnit(Soldier *soldier, int depth, int maxViewDistance) :
 	_faction(FACTION_PLAYER), _originalFaction(FACTION_PLAYER), _killedBy(FACTION_PLAYER), _id(0), _tile(0),
 	_lastPos(Position()), _direction(0), _toDirection(0), _directionTurret(0), _toDirectionTurret(0),
-	_verticalDirection(0), _status(STATUS_STANDING), _wantsToSurrender(false), _walkPhase(0), _fallPhase(0), _kneeled(false), _floating(false), _reservedAction(BA_NONE),
+	_verticalDirection(0), _status(STATUS_STANDING), _wantsToSurrender(false), _walkPhase(0), _fallPhase(0), _kneeled(false), _floating(false), _reservedAction(BA_NONE), _exclusiveReservation(false),
 	_dontReselect(false), _fire(0), _currentAIState(0), _visible(false),
 	_expBravery(0), _expReactions(0), _expFiring(0), _expThrowing(0), _expPsiSkill(0), _expPsiStrength(0), _expMelee(0),
 	_motionPoints(0), _kills(0), _hitByFire(false), _fireMaxHit(0), _smokeMaxHit(0), _moraleRestored(0), _coverReserve(0), _charging(0), _turnsSinceSpotted(255),
@@ -382,6 +382,7 @@ void BattleUnit::load(const YAML::Node &node, const ScriptGlobal *shared)
 	_morale = node["morale"].as<int>(_morale);
 	_kneeled = node["kneeled"].as<bool>(_kneeled);
 	_reservedAction = (BattleActionType)node["reservedAction"].as<int>(_reservedAction);
+	_exclusiveReservation = (BattleActionType)node["exclusiveReservation"].as<bool>(_exclusiveReservation);
 	_floating = node["floating"].as<bool>(_floating);
 	for (int i=0; i < SIDE_MAX; i++)
 		_currentArmor[i] = node["armor"][i].as<int>(_currentArmor[i]);
@@ -455,6 +456,7 @@ YAML::Node BattleUnit::save(const ScriptGlobal *shared) const
 	node["kneeled"] = _kneeled;
 	node["floating"] = _floating;
 	node["reservedAction"] = (int)_reservedAction;
+	node["exclusiveReservation"] = _exclusiveReservation;
 	for (int i=0; i < SIDE_MAX; i++) node["armor"].push_back(_currentArmor[i]);
 	for (int i=0; i < BODYPART_MAX; i++) node["fatalWounds"].push_back(_fatalWounds[i]);
 	node["fire"] = _fire;
@@ -1028,6 +1030,24 @@ void BattleUnit::reserveAction(BattleActionType type)
  {
 	 _reservedAction = type;
  }
+	
+/**
+ * Is the unit excluding other reaction shot types except the selected?
+ * @return True if the unit is excluding other reaction shot types.
+ */
+bool BattleUnit::getExclusivity() const
+{
+	return _exclusiveReservation;
+}
+	
+/**
+ * Set whether the unit is excluding other reaction shot types except the selected.
+ * @param Excluding true/false.
+ */
+void BattleUnit::exclusiveReservation(bool excluding)
+{
+	_exclusiveReservation = excluding;
+}
 
 /**
  * Aim. (shows the right hand sprite and weapon holding)
@@ -2531,10 +2551,11 @@ BattleItem *BattleUnit::getMainHandWeapon(bool quickest, bool ignoreEmpty) const
 	BattleItem *weaponRightHand = getRightHandWeapon();
 	BattleItem *weaponLeftHand = getLeftHandWeapon();
 
-	// ignore weapons without ammo (rules out grenades) – boolean used to enable melee reactions with empty guns
-	if (ignoreEmpty && (!weaponRightHand || !weaponRightHand->haveAnyAmmo()))
+	// ignore weapons without ammo (rules out grenades)
+	// boolean used to enable melee reactions with empty guns; battle type to rule out melee weapons
+	if (ignoreEmpty && (!weaponRightHand || (!weaponRightHand->haveAnyAmmo() && weaponRightHand->getRules()->getBattleType() != 3)))
 		weaponRightHand = 0;
-	if (ignoreEmpty && (!weaponLeftHand || !weaponLeftHand->haveAnyAmmo()))
+	if (ignoreEmpty && (!weaponLeftHand || (!weaponLeftHand->haveAnyAmmo() && weaponLeftHand->getRules()->getBattleType() != 3)))
 		weaponLeftHand = 0;
 
 	// if there is only one weapon, it's easy:

@@ -1638,8 +1638,9 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 		// Get all action types available for reaction with this weapon.
 		// Standard order is MELEE->AUTO->SNAP->AIMED. If unit has a manual selection, that goes first.
 		// FIXME: What about a melee weapon?
+		bool exclusive = unit->getExclusivity();
 		if (_save->canUseWeapon(weapon, unit, false) || _save->canUseWeapon(meleeWeapon, unit, false))
-			reactionTypes = weapon->getRules()->getReactionTypes(unit->getReservedAction());
+			reactionTypes = weapon->getRules()->getReactionTypes(unit->getReservedAction(), exclusive);
 		if (reactionTypes.empty())
 			return reaction;
 	}
@@ -1650,6 +1651,7 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 		reactionTypes.assign(types, types+2);
 	}
 
+	// FIXME: Add priorities for cases with one handed and two handed weapon; prioritize former.
 	bool force = true;
 	for (int i = 0; i < reactionTypes.size(); i++) {
 		// Force the shot even when inaccurate if it is manually selected (i.e. first) or is the last resort
@@ -1657,15 +1659,14 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 		// Get action type and the weapon to go with it.
 		BattleActionType actionType = BattleActionType(reactionTypes[i]);
 		BattleItem *currentweapon = actionType == BA_HIT ? meleeWeapon : weapon;
-		// Special case: firearm with melee capacities (gun butt). Replace melee weapon with weapon for BA_HIT check.
-		if (actionType == BA_HIT && _save->canUseWeapon(weapon, unit, false) && weapon->getRules()->getMeleeType() != 0)
+		// Firearm with melee. Replace melee weapon with weapon unless can use proper melee weapon (priority).
+		if (actionType == BA_HIT && _save->canUseWeapon(weapon, unit, false) && weapon->getRules()->getCostMelee().Time > 0 && (!meleeWeapon || !canReact(unit, target, meleeWeapon, BA_HIT)))
 			currentweapon = weapon;
 		if (canReact(unit, target, currentweapon, actionType, force))
 		{
 			reaction.reactionScore = unit->getReactionScore(BattleActionCost(actionType, unit, currentweapon).Time);
 			reaction.attackType = actionType;
 			reaction.reactionReduction = 1.0 * BattleActionCost(actionType, unit, currentweapon).Time * unit->getBaseStats()->reactions / unit->getBaseStats()->tu;
-			if (unit->getFaction() == FACTION_PLAYER)
 			return reaction;
 		}
 	}
@@ -1736,20 +1737,16 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, BattleActionT
 	action.actor = unit;
 	if (attackType == BA_HIT)
 	{
-		// Use melee weapon unless the unit has a firearm with a melee component (gun butt)
+		// Use melee weapon unless the unit has a firearm with a melee component (e.g. gun butt)
 		action.weapon = unit->getMainHandWeapon(unit->getFaction() != FACTION_PLAYER, false);
-		if (!_save->canUseWeapon(action.weapon, unit, false) || action.weapon->getRules()->getMeleeType() == 0)
+		if (!_save->canUseWeapon(action.weapon, unit, false) || action.weapon->getRules()->getCostMelee().Time == 0)
 			action.weapon = unit->getUtilityWeapon(BT_MELEE);
 	}
 	else
-	{
 		action.weapon = unit->getMainHandWeapon(unit->getFaction() != FACTION_PLAYER);
-	}
 
 	if (!_save->canUseWeapon(action.weapon, action.actor, false))
-	{
 		return false;
-	}
 
 	action.type = attackType;
 	action.target = target->getPosition();
