@@ -64,7 +64,7 @@ Uint8 BattlescapeButton::getColor() const
 }
 
 /**
- * Changes the button group this battlescape button belongs to, for general TU reservation.
+ * Changes the button group this battlescape button belongs to, for TU reservation.
  * @param group Pointer to the pressed button pointer in the group.
  * Null makes it a regular button.
  */
@@ -88,6 +88,15 @@ void BattlescapeButton::setGroupSelected(BattlescapeButton **groupSelected)
 }
 	
 /**
+ * Gets whether the button has been toggled as excluded.
+ * @return True if the button has been toggled as excluded.
+ */
+bool BattlescapeButton::getExclusion() const
+{
+	return _excluded;
+}
+	
+/**
  * Sets the button as the pressed button if it's part of a group,
  * and inverts the colors when pressed.
  * @param action Pointer to an action.
@@ -105,28 +114,25 @@ void BattlescapeButton::mousePress(Action *action, State *state)
 			_inverted = true;
 		}
 		else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_inverted && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
-		{
 			_inverted = true;
-		}
 	}
 	// Extended reaction fire toggling for right and middle mouse buttons
-	else if (Options::extendedReactionFire &&
-			(button == SDL_BUTTON_RIGHT || button == SDL_BUTTON_MIDDLE))
+	else if (Options::extendedReactionFire && button == SDL_BUTTON_RIGHT)
 	{
-		bool exclusive = button == SDL_BUTTON_MIDDLE;
 		if (_groupSelected != 0)
 		{
-			(*_groupSelected)->toggleSelected(false, exclusive);
+			(*_groupSelected)->toggleSelected(false);
 			*_groupSelected = this;
 			_selected = true;
-			_excluded = false;
 		}
 		else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_selected && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
 		{
-			_selected = true;
+			_selected = false;
 			_excluded = false;
 		}
 	}
+	else if (Options::extendedReactionFire && button == SDL_BUTTON_MIDDLE)
+		exclude(!_excluded);
 	
 	InteractiveSurface::mousePress(action, state);
 }
@@ -173,10 +179,18 @@ void BattlescapeButton::toggle(bool press)
  * Toggling reserve TU button for individual reaction fire type selection either ON or OFF and keep track of the state using our internal variables.
  * @param press Set this button as pressed.
  */
-void BattlescapeButton::toggleSelected(bool press, bool exclusive)
+void BattlescapeButton::toggleSelected(bool press)
 {
 	Options::extendedReactionFire ? _selected = press : _selected = false;
-	_excluded = (_selected || !Options::extendedReactionFire) ? false : exclusive;
+}
+	
+/**
+* Toggling reserve TU button for individual reaction fire type selection either ON or OFF and keep track of the state using our internal variables.
+* @param press Set this button as pressed.
+*/
+void BattlescapeButton::exclude(bool exclude)
+{
+	Options::extendedReactionFire ? _excluded = exclude : _excluded = false;
 }
 	
 /**

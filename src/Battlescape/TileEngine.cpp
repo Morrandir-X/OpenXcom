@@ -1638,9 +1638,8 @@ TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, Ba
 		// Get all action types available for reaction with this weapon.
 		// Standard order is MELEE->AUTO->SNAP->AIMED. If unit has a manual selection, that goes first.
 		// FIXME: What about a melee weapon?
-		bool exclusive = unit->getExclusivity();
 		if (_save->canUseWeapon(weapon, unit, false) || _save->canUseWeapon(meleeWeapon, unit, false))
-			reactionTypes = weapon->getRules()->getReactionTypes(unit->getReservedAction(), exclusive);
+			reactionTypes = weapon->getRules()->getReactionTypes(unit);
 		if (reactionTypes.empty())
 			return reaction;
 	}

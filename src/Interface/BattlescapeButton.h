@@ -59,9 +59,11 @@ public:
 	/// Invert a button explicitly either ON or OFF.
 	void toggle(bool invert);
 	/// Toggle selected either ON or OFF, exclusively or not (Extended Reaction Fire).
-	void toggleSelected(bool select, bool exclusive = false);
-	/// Toggle whether fire mode is excluded (Extended Reaction Fire)
+	void toggleSelected(bool select);
+	/// Set the button as excluded or not (Extended Reaction Fire)
 	void exclude(bool exclude);
+	/// Gets the exclusion status of the button.
+	bool getExclusion() const;
 	/// Allows this button to be toggled on/off with a click.
 	void allowToggleInversion();
 	/// Allows this button to be toggled on when clicked, and off when released.

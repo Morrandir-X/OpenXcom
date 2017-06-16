@@ -629,27 +629,39 @@ void BattlescapeState::init()
 		_reserve = _btnReserveNone;
 		break;
 	}
-	bool exclusive = playableUnitSelected() ? _save->getSelectedUnit()->getExclusivity() : false;
 	switch(playableUnitSelected() ? _save->getSelectedUnit()->getReservedAction() : BA_NONE)
 	{
+			// FIXME: toggling not required?
 	case BA_SNAPSHOT:
 		_select = _btnReserveSnap;
-		_btnReserveSnap->toggleSelected(true, exclusive);
+		_btnReserveSnap->toggleSelected(true);
 		break;
 	case BA_AUTOSHOT:
 		_select = _btnReserveAuto;
-		_btnReserveAuto->toggleSelected(true, exclusive);
+		_btnReserveAuto->toggleSelected(true);
 		break;
 	case BA_AIMEDSHOT:
 		_select = _btnReserveAimed;
-		_btnReserveAimed->toggleSelected(true, exclusive);
+		_btnReserveAimed->toggleSelected(true);
 		break;
 	default:
 		_select = _btnReserveNone;
 		_btnReserveNone->toggleSelected(true);
 		break;
 	}
-	
+	_btnReserveNone->exclude(false);
+	if (playableUnitSelected())
+	{
+		_btnReserveSnap->exclude(_save->getSelectedUnit()->isExcluded(BA_SNAPSHOT));
+		_btnReserveAuto->exclude(_save->getSelectedUnit()->isExcluded(BA_AUTOSHOT));
+		_btnReserveAimed->exclude(_save->getSelectedUnit()->isExcluded(BA_AIMEDSHOT));
+	}
+	else
+	{
+		_btnReserveSnap->exclude(false);
+		_btnReserveAuto->exclude(false);
+		_btnReserveAimed->exclude(false);
+	}
 	if (_firstInit && playableUnitSelected())
 	{
 		_battleGame->setupCursor();
@@ -1014,19 +1026,28 @@ void BattlescapeState::btnShowMapClick(Action *)
 }
 	
 /**
- * Toggles the reserve TUs button for individual choice.
+ * Toggles the reserve TUs button for individual reaction fire choice.
  * @param unit Pointer to a unit.
  */
 void BattlescapeState::toggleReserveActionButton(BattleUnit* unit)
 {
-	BattleActionType selected = unit->getReservedAction();
-	bool exclusive = unit->getExclusivity();
 	BattleActionType selected = Options::extendedReactionFire ? unit->getReservedAction() : BA_NONE;
-	bool exclusive = Options::extendedReactionFire ? unit->getExclusivity() : false;
-	_btnReserveSnap->toggleSelected(selected == BA_SNAPSHOT, exclusive);
-	_btnReserveAuto->toggleSelected(selected == BA_AUTOSHOT, exclusive);
-	_btnReserveAimed->toggleSelected(selected == BA_AIMEDSHOT, exclusive);
+	_btnReserveSnap->toggleSelected(selected == BA_SNAPSHOT);
+	_btnReserveAuto->toggleSelected(selected == BA_AUTOSHOT);
+	_btnReserveAimed->toggleSelected(selected == BA_AIMEDSHOT);
 	_btnReserveNone->toggleSelected(selected == BA_NONE);
+}
+	
+/**
+ * Toggles the reserve TUs button for excluded reaction fire types.
+ * @param unit Pointer to a unit.
+ */
+void BattlescapeState::toggleExcludeActionButton(BattleUnit* unit)
+{
+	_btnReserveSnap->exclude(unit->isExcluded(BA_SNAPSHOT));
+	_btnReserveAuto->exclude(unit->isExcluded(BA_AUTOSHOT));
+	_btnReserveAimed->exclude(unit->isExcluded(BA_AIMEDSHOT));
+	_btnReserveNone->exclude(false);
 }
 
 void BattlescapeState::toggleKneelButton(BattleUnit* unit)
@@ -1401,17 +1422,17 @@ void BattlescapeState::btnReserveClick(Action *action)
 		}
 		
 		// If Extended Reaction Fire is enabled, process right and middle button clicks.
-		if (button == SDL_BUTTON_RIGHT || button == SDL_BUTTON_MIDDLE)
+		else if (button == SDL_BUTTON_RIGHT)
 		{
 			ev.type = SDL_MOUSEBUTTONDOWN;
-			ev.button.button = button == SDL_BUTTON_RIGHT ? SDL_BUTTON_RIGHT : SDL_BUTTON_MIDDLE;
+			ev.button.button = SDL_BUTTON_RIGHT;
 			Action a = Action(&ev, 0.0, 0.0, 0, 0);
 			action->getSender()->mousePress(&a, this);
 			
 			if (Options::extendedReactionFire)
 			{
-				bool exclusive = button == SDL_BUTTON_MIDDLE;
-				BattleItem *weapon = _save->getSelectedUnit()->getMainHandWeapon();
+				BattleUnit *unit = _save->getSelectedUnit();
+				BattleItem *weapon = unit->getMainHandWeapon();
 				if (weapon)
 				{
 					if (_select == _btnReserveNone)
@@ -1419,15 +1440,37 @@ void BattlescapeState::btnReserveClick(Action *action)
 					else if (_select == _btnReserveSnap &&
 							weapon->getRules()->canReact(BA_SNAPSHOT) &&
 							weapon->getRules()->getCostSnap().Time != 0)
-						_battleGame->setReservedAction(BA_SNAPSHOT, exclusive);
+					{
+						_battleGame->setReservedAction(BA_SNAPSHOT);
+						// If this button was previously excluded, de-exclude it now.
+						if (unit->isExcluded(BA_SNAPSHOT))
+						{
+							_battleGame->excludeAction(BA_SNAPSHOT, false);
+							toggleExcludeActionButton(_save->getSelectedUnit());
+						}
+					}
 					else if (_select == _btnReserveAuto &&
 							weapon->getRules()->canReact(BA_AUTOSHOT) &&
 							weapon->getRules()->getCostAuto().Time != 0)
-						_battleGame->setReservedAction(BA_AUTOSHOT, exclusive);
+					{
+						_battleGame->setReservedAction(BA_AUTOSHOT);
+						if (unit->isExcluded(BA_AUTOSHOT))
+						{
+							_battleGame->excludeAction(BA_AUTOSHOT, false);
+							toggleExcludeActionButton(_save->getSelectedUnit());
+						}
+					}
 					else if (_select == _btnReserveAimed  &&
 							weapon->getRules()->canReact(BA_AIMEDSHOT) &&
 							weapon->getRules()->getCostAimed().Time != 0)
-						_battleGame->setReservedAction(BA_AIMEDSHOT, exclusive);
+					{
+						_battleGame->setReservedAction(BA_AIMEDSHOT);
+						if (unit->isExcluded(BA_AIMEDSHOT))
+						{
+							_battleGame->excludeAction(BA_AIMEDSHOT, false);
+							toggleExcludeActionButton(_save->getSelectedUnit());
+						}
+					}
 					else
 						warning("UNSUPPORTED FIRE MODE"); //FIXME: MAKE STR
 				}
@@ -1450,7 +1493,35 @@ void BattlescapeState::btnReserveClick(Action *action)
 			}
 			else
 			{
-				_battleGame->setReservedAction(BA_NONE, false);
+				_battleGame->setReservedAction(BA_NONE);
+			}
+		}
+		
+		else if (button == SDL_BUTTON_MIDDLE)
+		{
+			ev.type = SDL_MOUSEBUTTONDOWN;
+			ev.button.button = SDL_BUTTON_MIDDLE;
+			Action a = Action(&ev, 0.0, 0.0, 0, 0);
+			action->getSender()->mousePress(&a, this);
+			
+			if (Options::extendedReactionFire)
+			{
+				BattleUnit *unit = _save->getSelectedUnit();
+
+				if (action->getSender() == _btnReserveSnap)
+				{
+					_battleGame->excludeAction(BA_SNAPSHOT, !unit->isExcluded(BA_SNAPSHOT));
+				}
+				if (action->getSender() == _btnReserveAuto)
+				{
+					_battleGame->excludeAction(BA_AUTOSHOT, !unit->isExcluded(BA_AUTOSHOT));
+				}
+				if (action->getSender() == _btnReserveAimed)
+				{
+					_battleGame->excludeAction(BA_AIMEDSHOT, !unit->isExcluded(BA_AIMEDSHOT));
+				}
+				
+				toggleExcludeActionButton(_save->getSelectedUnit());
 			}
 		}
 	}
@@ -1685,7 +1756,8 @@ void BattlescapeState::updateSoldierInfo()
 	_barMorale->setValue(battleUnit->getMorale());
 
 	toggleKneelButton(battleUnit);
-    toggleReserveActionButton(battleUnit);
+	toggleReserveActionButton(battleUnit);
+	toggleExcludeActionButton(battleUnit);
 	
 	// FIXME: Meridian: extract into function later like Yankes did (merge conflict)
 	//drawHandsItems();
@@ -2760,7 +2832,7 @@ void BattlescapeState::btnZeroTUsClick(Action *action)
 	{
 		SDL_Event ev;
 		ev.type = SDL_MOUSEBUTTONDOWN;
-		ev.button.button = SDL_BUTTON_LEFT;
+		ev.button.button = SDL_BUTTON_RIGHT;
 		Action a = Action(&ev, 0.0, 0.0, 0, 0);
 		action->getSender()->mousePress(&a, this);
 		if (_battleGame->getSave()->getSelectedUnit())

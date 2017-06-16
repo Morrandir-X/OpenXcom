@@ -1537,21 +1537,17 @@ bool RuleItem::canReact(Uint8 type) const
  * Gets the reaction types available for this weapon.
  * @return Vector of all available types.
  */
-std::vector<Uint8> RuleItem::getReactionTypes(Uint8 selected, bool exclusive) const
+	std::vector<Uint8> RuleItem::getReactionTypes(const BattleUnit *unit) const
 {
+	Uint8 selected = unit->getReservedAction();
 	std::vector<Uint8> types;
-	if (exclusive)
-	{
-		types.push_back(selected);
-		return types;
-	}
 	if (_canReactMelee)
 		types.push_back(BA_HIT);
-	if (_canReactAuto)
+	if (_canReactAuto && !unit->isExcluded(BA_AUTOSHOT))
 		selected == BA_AUTOSHOT ? types.insert(types.begin(), BA_AUTOSHOT) : types.insert(types.end(), BA_AUTOSHOT);
-	if (_canReactSnap)
+	if (_canReactSnap && !unit->isExcluded(BA_SNAPSHOT))
 		selected == BA_SNAPSHOT ? types.insert(types.begin(), BA_SNAPSHOT) : types.insert(types.end(), BA_SNAPSHOT);
-	if (_canReactAimed)
+	if (_canReactAimed && !unit->isExcluded(BA_AIMEDSHOT))
 		selected == BA_AIMEDSHOT ? types.insert(types.begin(), BA_AIMEDSHOT) : types.insert(types.end(), BA_AIMEDSHOT);
 	return types;
 }

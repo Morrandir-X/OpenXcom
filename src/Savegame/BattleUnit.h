@@ -95,7 +95,7 @@ private:
 	int _tu, _energy, _health, _morale, _stunlevel;
 	bool _kneeled, _floating, _dontReselect;
 	BattleActionType _reservedAction;
-	bool _exclusiveReservation;
+	std::vector<BattleActionType> _excludedActions;
 	int _currentArmor[SIDE_MAX], _maxArmor[SIDE_MAX];
 	int _fatalWounds[BODYPART_MAX];
 	int _fire;
@@ -241,14 +241,14 @@ public:
 	bool isKneeled() const;
 	/// Is floating?
 	bool isFloating() const;
-	/// Get the reserved action.
+	/// Get the preferred action for reaction fire.
 	BattleActionType getReservedAction() const;
-	/// Set action for which the individual unit reserves TUs
+	/// Set preferred action for reaction fire.
 	void reserveAction(BattleActionType type);
-	/// Get whether reserved action is exclusive.
-	bool getExclusivity() const;
-	/// Set whether reserved action is exclusive.
-	void exclusiveReservation(bool excluding);
+	/// Check whether the action is excluded from reaction fire.
+	bool isExcluded(BattleActionType action) const;
+	/// Exclude/de-exclude action from reaction fire.
+	void excludeAction(BattleActionType type, bool exclude = false);
 	/// Aim.
 	void aim(bool aiming);
 	/// Get direction to a certain point

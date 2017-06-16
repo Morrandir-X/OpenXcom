@@ -442,7 +442,7 @@ public:
 	/// Can the item be used for specified type of reaction?
 	bool canReact(Uint8 type) const;
 	/// Gets the reaction types possible for this weapon.
-	std::vector<Uint8> getReactionTypes(Uint8 selected = 0, bool exclusive = false) const;
+	std::vector<Uint8> getReactionTypes(const BattleUnit *unit) const;
 	/// Gets the medikit use type.
 	BattleMediKitType getMediKitType() const;
 	/// Gets the max explosion radius.

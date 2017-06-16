@@ -1876,7 +1876,7 @@ void BattlescapeGame::requestEndTurn(bool askForConfirmation)
 /**
  * Sets the TU reserved type.
  * @param tur A battleactiontype.
- * @param player is this requested by the player?
+ * @param player is this requested by the player? FIXME: No parameter player.
  */
 void BattlescapeGame::setTUReserved(BattleActionType tur)
 {
@@ -1887,12 +1887,21 @@ void BattlescapeGame::setTUReserved(BattleActionType tur)
  * Sets the reserved action type for reaction for the selected unit.
  * @param type Reserved battleactiontype.
  */
-void BattlescapeGame::setReservedAction(BattleActionType type, bool exclusive)
+void BattlescapeGame::setReservedAction(BattleActionType type)
 {
 	_save->getSelectedUnit()->reserveAction(type);
-	_save->getSelectedUnit()->exclusiveReservation(exclusive);
 }
 	
+/**
+ * Excludes action type from reaction shot for the selected unit.
+ * @param action Excluded battle action type.
+ * @param exclude Exclude or de-exclude.
+ */
+void BattlescapeGame::excludeAction(BattleActionType action, bool exclude)
+{
+	_save->getSelectedUnit()->excludeAction(action, exclude);
+}
+		
 /**
  * Drops an item to the floor and affects it with gravity.
  * @param position Position to spawn the item.
