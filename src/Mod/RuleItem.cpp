@@ -1506,7 +1506,7 @@ bool RuleItem::isFireExtinguisher() const
 {
 	return _isFireExtinguisher;
 }
-
+ 
 /**
  * Is this item explode in hands?
  * @return True if the item can explode in hand.
@@ -1517,8 +1517,9 @@ bool RuleItem::isExplodingInHands() const
 }
 	
 /**
- *
- *
+ * Can this item be used for the specified type of reaction?
+ * @param type Type of reaction.
+ * @return True if can react with the given type, false if not.
  */
 bool RuleItem::canReact(Uint8 type) const
 {
@@ -1531,43 +1532,26 @@ bool RuleItem::canReact(Uint8 type) const
 		default: return false;
 	}
 }
-    
+
 /**
- * Can this item be used for reactions with aimed shot?
- * @return True if the item can be used for reactions with aimed shot.
+ * Gets the reaction types available for this weapon.
+ * @return Vector of all available types.
  */
-bool RuleItem::canReactAimed() const
+	std::vector<Uint8> RuleItem::getReactionTypes(const BattleUnit *unit) const
 {
-	return _canReactAimed;
+	Uint8 selected = unit->getReservedAction();
+	std::vector<Uint8> types;
+	if (_canReactMelee)
+		types.push_back(BA_HIT);
+	if (_canReactAuto && !unit->isExcluded(BA_AUTOSHOT))
+		selected == BA_AUTOSHOT ? types.insert(types.begin(), BA_AUTOSHOT) : types.insert(types.end(), BA_AUTOSHOT);
+	if (_canReactSnap && !unit->isExcluded(BA_SNAPSHOT))
+		selected == BA_SNAPSHOT ? types.insert(types.begin(), BA_SNAPSHOT) : types.insert(types.end(), BA_SNAPSHOT);
+	if (_canReactAimed && !unit->isExcluded(BA_AIMEDSHOT))
+		selected == BA_AIMEDSHOT ? types.insert(types.begin(), BA_AIMEDSHOT) : types.insert(types.end(), BA_AIMEDSHOT);
+	return types;
 }
-    
-/**
-* Can this item be used for reactions with auto shot?
-* @return True if the item can be used for reactions with aimed shot.
-*/
-bool RuleItem::canReactAuto() const
-{
-	return _canReactAuto;
-}
-
-/**
-* Can this item be used for reactions with snap shot?
-* @return True if the item can be used for reactions with snap shot.
-*/
-bool RuleItem::canReactSnap() const
-{
-	return _canReactSnap;
-}
-    
-/**
-* Can this item be used for melee reactions?
-* @return True if the item can be used for melee reactions.
-*/
-bool RuleItem::canReactMelee() const
-{
-	return _canReactMelee;
-}
-
+	
 /**
  * Gets the medikit type of how it operate.
  * @return Type of medikit.

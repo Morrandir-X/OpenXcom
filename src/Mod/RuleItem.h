@@ -439,16 +439,10 @@ public:
 	bool isFireExtinguisher() const;
 	/// Is this item explode in hands?
 	bool isExplodingInHands() const;
-	/// Can the item be used for specified reactions?
+	/// Can the item be used for specified type of reaction?
 	bool canReact(Uint8 type) const;
-	/// Can the item be used for reactions with aimed shot?
-	bool canReactAimed() const;
-	/// Can the item be used for reactions with auto shot?
-	bool canReactAuto() const;
-	/// Can the item be used for reactions with snap shot?
-	bool canReactSnap() const;
-	/// Can the item be used for melee reactions?
-	bool canReactMelee() const;
+	/// Gets the reaction types possible for this weapon.
+	std::vector<Uint8> getReactionTypes(const BattleUnit *unit) const;
 	/// Gets the medikit use type.
 	BattleMediKitType getMediKitType() const;
 	/// Gets the max explosion radius.

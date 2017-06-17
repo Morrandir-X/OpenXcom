@@ -30,7 +30,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _groupSelected(0), _inverted(false), _selected(false), _toggleMode(INVERT_NONE), _altSurface(0), _altSurfaceSel(0), _altSurfaceInvSel(0)
+BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _groupSelected(0), _inverted(false), _selected(false), _excluded(false), _canBeExcluded(false), _toggleMode(INVERT_NONE), _altSurface(0), _altSurfaceSel(0), _altSurfaceInvSel(0), _altSurfaceEx(0)
 {
 }
 
@@ -42,6 +42,7 @@ BattlescapeButton::~BattlescapeButton()
 	delete _altSurface;
 	delete _altSurfaceSel;
 	delete _altSurfaceInvSel;
+	delete _altSurfaceEx;
 }
 
 /**
@@ -63,7 +64,7 @@ Uint8 BattlescapeButton::getColor() const
 }
 
 /**
- * Changes the button group this battlescape button belongs to, for general TU reservation.
+ * Changes the button group this battlescape button belongs to, for TU reservation.
  * @param group Pointer to the pressed button pointer in the group.
  * Null makes it a regular button.
  */
@@ -75,7 +76,7 @@ void BattlescapeButton::setGroup(BattlescapeButton **group)
 }
 	
 /**
- * Changes the button group this battlescape button belongs to, for individual TU reservation.
+ * Changes the button group this battlescape button belongs to, for individually selected reaction shot type.
  * @param group Pointer to the pressed button pointer in the group.
  * Null makes it a regular button.
  */
@@ -85,7 +86,15 @@ void BattlescapeButton::setGroupSelected(BattlescapeButton **groupSelected)
 	if (_groupSelected != 0 && *_groupSelected == this)
 		_selected = true;
 }
-
+	
+/**
+ * Sets the button as capable of being excluded.
+ */
+void BattlescapeButton::canExclude()
+{
+	_canBeExcluded = true;
+}
+	
 /**
  * Sets the button as the pressed button if it's part of a group,
  * and inverts the colors when pressed.
@@ -94,7 +103,8 @@ void BattlescapeButton::setGroupSelected(BattlescapeButton **groupSelected)
  */
 void BattlescapeButton::mousePress(Action *action, State *state)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	Uint8 button = action->getDetails()->button.button;
+	if (button == SDL_BUTTON_LEFT)
 	{
 		if (_group != 0)
 		{
@@ -103,23 +113,27 @@ void BattlescapeButton::mousePress(Action *action, State *state)
 			_inverted = true;
 		}
 		else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_inverted && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
-		{
 			_inverted = true;
-		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	// Extended reaction fire toggling for right and middle mouse buttons
+	else if (Options::extendedReactionFire && button == SDL_BUTTON_RIGHT)
 	{
 		if (_groupSelected != 0)
 		{
 			(*_groupSelected)->toggleSelected(false);
 			*_groupSelected = this;
-			Options::extendedReactionFire ? _selected = true : _selected = false;
+			_selected = true;
 		}
 		else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_selected && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
 		{
-			Options::extendedReactionFire ? _selected = true : _selected = false;
+			// FIXME: Exclude right clicking selected from expend TUs (done right?)
+			_selected = false;
+			_excluded = false;
 		}
 	}
+	else if (Options::extendedReactionFire && button == SDL_BUTTON_MIDDLE && _canBeExcluded)
+		exclude(!_excluded);
+	
 	InteractiveSurface::mousePress(action, state);
 }
 
@@ -132,19 +146,10 @@ void BattlescapeButton::mouseRelease(Action *action, State *state)
 {
 	if (_inverted && isButtonHandled(action->getDetails()->button.button))
 	{
-		if (_group == 0) // For zero TUs button
-		{
+		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 			_inverted = false;
+		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 			_selected = false;
-		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_LEFT) // Left clicked on a reserve button
-		{
-			_inverted = false;
-		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) // Right clicked on a reserve button
-		{
-			_selected = false;
-		}
 	}
 	InteractiveSurface::mouseRelease(action, state);
 }
@@ -162,12 +167,21 @@ void BattlescapeButton::toggle(bool press)
 }
 	
 /**
- * Toggling reserve TU button for individual selection either ON or OFF and keep track of the state using our internal variables.
+ * Toggling reserve TU button for individual reaction fire type selection either ON or OFF and keep track of the state using our internal variables.
  * @param press Set this button as pressed.
  */
 void BattlescapeButton::toggleSelected(bool press)
 {
 	Options::extendedReactionFire ? _selected = press : _selected = false;
+}
+	
+/**
+* Toggling reserve TU button for individual reaction fire type selection either ON or OFF and keep track of the state using our internal variables.
+* @param press Set this button as pressed.
+*/
+void BattlescapeButton::exclude(bool exclude)
+{
+	Options::extendedReactionFire ? _excluded = exclude : _excluded = false;
 }
 	
 /**
@@ -203,11 +217,15 @@ void BattlescapeButton::initSurfaces()
 	delete _altSurfaceInvSel;
 	_altSurfaceInvSel = new Surface(_surface->w, _surface->h, _x, _y); // For selected and inverted reserve button
 	_altSurfaceInvSel->setPalette(getPalette());
+	delete _altSurfaceEx;
+	_altSurfaceEx = new Surface(_surface->w, _surface->h, _x, _y); // For excluded button
+	_altSurfaceEx->setPalette(getPalette());
 	
 	// Lock the surface
 	_altSurface->lock();
 	_altSurfaceSel->lock();
 	_altSurfaceInvSel->lock();
+	_altSurfaceEx->lock();
 
 	// FIXME: IMPLEMENT OTHER ALTSURFACES FOR TFTD MODE
 	// tftd mode: use a colour lookup table instead of simple palette inversion for our "pressed" state
@@ -237,13 +255,37 @@ void BattlescapeButton::initSurfaces()
 		{
 			Uint8 pixel = getPixel(x, y);
 			if (pixel > 0)
-			{
 				_altSurface->setPixelIterative(&x, &y, pixel + 2 * ((int)_color + 3 - (int)pixel));
+			else
+				_altSurface->setPixelIterative(&x, &y, 0);
+		}
+		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
+		{
+			Uint8 pixel = getPixel(x, y);
+			if (pixel == 34) // The colour of the shooting figure in reserve button
+				_altSurfaceSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color - 10 - (int)pixel));
+			else
+				_altSurfaceSel->setPixelIterative(&x, &y, 0);
+		}
+		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
+		{
+			Uint8 pixel = getPixel(x, y);
+			if (pixel > 0)
+			{
+				if (pixel == 34)
+					_altSurfaceInvSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color - 10 - (int)pixel));
+				else
+					_altSurfaceInvSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color + 3 - (int)pixel));
 			}
 			else
-			{
-				_altSurface->setPixelIterative(&x, &y, 0);
-			}
+				_altSurfaceInvSel->setPixelIterative(&x, &y, 0);
+		}
+		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
+		{
+			if (x > 1 && x < getWidth() - 1 && y > 1 && y < getHeight() - 1)
+				_altSurfaceEx->setPixelIterative(&x, &y, 34 + 2 * ((int)_color + 1 - 34));
+			else
+				_altSurfaceEx->setPixelIterative(&x, &y, 0);
 		}
 		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
 		{
@@ -281,6 +323,7 @@ void BattlescapeButton::initSurfaces()
 	_altSurface->unlock();
 	_altSurfaceSel->unlock();
 	_altSurfaceInvSel->unlock();
+	_altSurfaceEx->unlock();
 }
 
 /**
@@ -290,22 +333,16 @@ void BattlescapeButton::initSurfaces()
  */
 void BattlescapeButton::blit(Surface *surface)
 {
-	if (_inverted && !_selected)
-	{
+	if (_inverted && (!Options::extendedReactionFire || !_selected))
 		_altSurface->blit(surface);
-	}
-	else if (!_inverted && _selected)
-	{
+	else if (Options::extendedReactionFire && !_inverted && _selected)
 		_altSurfaceSel->blit(surface);
-	}
-	else if (_inverted && _selected)
-	{
+	else if (Options::extendedReactionFire && _inverted && _selected)
 		_altSurfaceInvSel->blit(surface);
-	}
 	else
-	{
 		Surface::blit(surface);
-	}
+	if (Options::extendedReactionFire && _excluded)
+		_altSurfaceEx->blit(surface);
 }
 
 /**

@@ -102,6 +102,8 @@ private:
 	void toggleKneelButton(BattleUnit* unit);
 	/// Shows the unit reserve TU state.
 	void toggleReserveActionButton(BattleUnit* unit);
+	/// Shows the unit exclude reaction state.
+	void toggleExcludeActionButton(BattleUnit* unit);
 public:
 	/// Selects the next soldier.
 	void selectNextPlayerUnit(bool checkReselect = false, bool setReselect = false, bool checkInventory = false);
