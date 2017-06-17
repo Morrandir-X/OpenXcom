@@ -1409,7 +1409,6 @@ void BattlescapeState::btnReserveClick(Action *action)
 
 		if (button == SDL_BUTTON_LEFT)
 		{
-			
 			if (_reserve == _btnReserveNone)
 				_battleGame->setTUReserved(BA_NONE);
 			else if (_reserve == _btnReserveSnap)
@@ -1730,7 +1729,7 @@ void BattlescapeState::updateSoldierInfo()
 	toggleKneelButton(battleUnit);
 	toggleReserveActionButton(battleUnit);
 	toggleExcludeActionButton(battleUnit);
-	
+
 	// FIXME: Meridian: extract into function later like Yankes did (merge conflict)
 	//drawHandsItems();
 

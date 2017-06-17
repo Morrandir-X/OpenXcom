@@ -1874,7 +1874,7 @@ void BattlescapeGame::requestEndTurn(bool askForConfirmation)
 }
 
 /**
- * Sets the TU reserved type.
+ * Sets the TU reserved type. (General!)
  * @param tur A battleactiontype.
  * @param player is this requested by the player? FIXME: No parameter player.
  */

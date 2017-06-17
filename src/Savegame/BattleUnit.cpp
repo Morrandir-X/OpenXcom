@@ -4350,7 +4350,6 @@ void BattleUnit::ScriptRegister(ScriptParserBase* parser)
 	bu.add<&getRecolorScript>("getRecolor");
 	bu.add<&BattleUnit::isFloating>("isFloating");
 	bu.add<&BattleUnit::isKneeled>("isKneeled");
-	// bu.add<&BattleUnit::getReservedAction>("getReservedAction");
 	bu.add<&isStandingScript>("isStanding");
 	bu.add<&isWalkingScript>("isWalking");
 	bu.add<&isFlyingScript>("isFlying");

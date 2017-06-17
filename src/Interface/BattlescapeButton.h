@@ -58,7 +58,7 @@ public:
 	void mouseRelease(Action *action, State *state);
 	/// Invert a button explicitly either ON or OFF.
 	void toggle(bool invert);
-	/// Toggle selected either ON or OFF, exclusively or not (Extended Reaction Fire).
+	/// Toggle selected either ON or OFF (Extended Reaction Fire).
 	void toggleSelected(bool select);
 	/// Set the button as excluded or not (Extended Reaction Fire)
 	void exclude(bool exclude);

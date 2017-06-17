@@ -287,6 +287,36 @@ void BattlescapeButton::initSurfaces()
 			else
 				_altSurfaceEx->setPixelIterative(&x, &y, 0);
 		}
+		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
+		{
+			Uint8 pixel = getPixel(x, y);
+			if (pixel == 34) // The colour of the shooting figure in reserve button
+			{
+				_altSurfaceSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color - 10 - (int)pixel));
+			}
+			else
+			{
+				_altSurfaceSel->setPixelIterative(&x, &y, 0);
+			}
+		}
+		for (int x = 0, y = 0; x < getWidth() && y < getHeight();)
+		{
+			Uint8 pixel = getPixel(x, y);
+			if (pixel > 0)
+			{
+				if (pixel == 34) {
+					_altSurfaceInvSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color - 10 - (int)pixel));
+				}
+				else
+				{
+					_altSurfaceInvSel->setPixelIterative(&x, &y, pixel + 2 * ((int)_color + 3 - (int)pixel));
+				}
+			}
+			else
+			{
+				_altSurfaceInvSel->setPixelIterative(&x, &y, 0);
+			}
+		}
 	}
 	
 	// Unlock the surface
