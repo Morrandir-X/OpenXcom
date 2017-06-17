@@ -86,7 +86,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState() : _reserve(0), _select(0), _firstInit(true), _isMouseScrolling(false), _isMouseScrolled(false), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _mouseOverIcons(false), _autosave(false), _animFrame(0), _numberOfDirectlyVisibleUnits(0), _numberOfEnemiesTotal(0), _numberOfEnemiesTotalPlusWounded(0)
+	BattlescapeState::BattlescapeState() : _reserve(0), _select(0), _firstInit(true), _isMouseScrolling(false), _isMouseScrolled(false), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _mouseOverIcons(false), _autosave(false), _animFrame(0), _numberOfDirectlyVisibleUnits(0), _numberOfEnemiesTotal(0), _numberOfEnemiesTotalPlusWounded(0)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
@@ -545,6 +545,10 @@ BattlescapeState::BattlescapeState() : _reserve(0), _select(0), _firstInit(true)
 	_btnReserveSnap->setGroupSelected(&_select);
 	_btnReserveAimed->setGroupSelected(&_select);
 	_btnReserveAuto->setGroupSelected(&_select);
+	
+	_btnReserveSnap->canExclude();
+	_btnReserveAuto->canExclude();
+	_btnReserveAimed->canExclude();
 	
 	// Set music
 	if (_save->getMusic() == "")
@@ -1398,11 +1402,13 @@ void BattlescapeState::btnReserveClick(Action *action)
 	{
 		Uint8 button = action->getDetails()->button.button;
 		SDL_Event ev;
-		if (button == SDL_BUTTON_LEFT) {
-			ev.type = SDL_MOUSEBUTTONDOWN;
-			ev.button.button = SDL_BUTTON_LEFT;
-			Action a = Action(&ev, 0.0, 0.0, 0, 0);
-			action->getSender()->mousePress(&a, this);
+		ev.type = SDL_MOUSEBUTTONDOWN;
+		ev.button.button = button;
+		Action a = Action(&ev, 0.0, 0.0, 0, 0);
+		action->getSender()->mousePress(&a, this);
+
+		if (button == SDL_BUTTON_LEFT)
+		{
 			
 			if (_reserve == _btnReserveNone)
 				_battleGame->setTUReserved(BA_NONE);
@@ -1422,107 +1428,73 @@ void BattlescapeState::btnReserveClick(Action *action)
 		}
 		
 		// If Extended Reaction Fire is enabled, process right and middle button clicks.
-		else if (button == SDL_BUTTON_RIGHT)
+		else if (button == SDL_BUTTON_RIGHT && Options::extendedReactionFire)
 		{
-			ev.type = SDL_MOUSEBUTTONDOWN;
-			ev.button.button = SDL_BUTTON_RIGHT;
-			Action a = Action(&ev, 0.0, 0.0, 0, 0);
-			action->getSender()->mousePress(&a, this);
-			
-			if (Options::extendedReactionFire)
+			BattleUnit *unit = _save->getSelectedUnit();
+			BattleItem *weapon = unit->getMainHandWeapon();
+			if (weapon)
 			{
-				BattleUnit *unit = _save->getSelectedUnit();
-				BattleItem *weapon = unit->getMainHandWeapon();
-				if (weapon)
-				{
-					if (_select == _btnReserveNone)
-						_battleGame->setReservedAction(BA_NONE);
-					else if (_select == _btnReserveSnap &&
+				if (_select == _btnReserveNone)
+					_battleGame->setReservedAction(BA_NONE);
+				else if (_select == _btnReserveSnap &&
 							weapon->getRules()->canReact(BA_SNAPSHOT) &&
 							weapon->getRules()->getCostSnap().Time != 0)
-					{
-						_battleGame->setReservedAction(BA_SNAPSHOT);
-						// If this button was previously excluded, de-exclude it now.
-						if (unit->isExcluded(BA_SNAPSHOT))
-						{
-							_battleGame->excludeAction(BA_SNAPSHOT, false);
-							toggleExcludeActionButton(_save->getSelectedUnit());
-						}
-					}
-					else if (_select == _btnReserveAuto &&
+				{
+					_battleGame->setReservedAction(BA_SNAPSHOT);
+					// If this button was previously excluded, de-exclude it now.
+					if (unit->isExcluded(BA_SNAPSHOT))
+						_battleGame->excludeAction(BA_SNAPSHOT, false);
+				}
+				else if (_select == _btnReserveAuto &&
 							weapon->getRules()->canReact(BA_AUTOSHOT) &&
 							weapon->getRules()->getCostAuto().Time != 0)
-					{
-						_battleGame->setReservedAction(BA_AUTOSHOT);
-						if (unit->isExcluded(BA_AUTOSHOT))
-						{
-							_battleGame->excludeAction(BA_AUTOSHOT, false);
-							toggleExcludeActionButton(_save->getSelectedUnit());
-						}
-					}
-					else if (_select == _btnReserveAimed  &&
+				{
+					_battleGame->setReservedAction(BA_AUTOSHOT);
+					if (unit->isExcluded(BA_AUTOSHOT))
+						_battleGame->excludeAction(BA_AUTOSHOT, false);
+				}
+				else if (_select == _btnReserveAimed  &&
 							weapon->getRules()->canReact(BA_AIMEDSHOT) &&
 							weapon->getRules()->getCostAimed().Time != 0)
-					{
-						_battleGame->setReservedAction(BA_AIMEDSHOT);
-						if (unit->isExcluded(BA_AIMEDSHOT))
-						{
-							_battleGame->excludeAction(BA_AIMEDSHOT, false);
-							toggleExcludeActionButton(_save->getSelectedUnit());
-						}
-					}
-					else
-						warning("UNSUPPORTED FIRE MODE"); //FIXME: MAKE STR
-				}
-				else if (_select == _btnReserveSnap || _select == _btnReserveAuto || _select == _btnReserveAimed)
 				{
+					_battleGame->setReservedAction(BA_AIMEDSHOT);
+					if (unit->isExcluded(BA_AIMEDSHOT))
+						_battleGame->excludeAction(BA_AIMEDSHOT, false);
+				}
+				else
 					warning("UNSUPPORTED FIRE MODE"); //FIXME: MAKE STR
-					//_battleGame->setReservedAction(BA_NONE); FIXME: Should not be done?
-				}
-				else if (_select == _btnReserveNone)
-					_battleGame->setReservedAction(BA_NONE);
-				
-				toggleReserveActionButton(_save->getSelectedUnit());
-				
-				// update any path preview
-				if (_battleGame->getPathfinding()->isPathPreviewed())
-				{
-					_battleGame->getPathfinding()->removePreview();
-					_battleGame->getPathfinding()->previewPath();
-				}
 			}
-			else
+			else if (_select == _btnReserveSnap || _select == _btnReserveAuto || _select == _btnReserveAimed)
 			{
+				warning("UNSUPPORTED FIRE MODE"); //FIXME: MAKE STR
+				//_battleGame->setReservedAction(BA_NONE); FIXME: Should not be done?
+			}
+			else if (_select == _btnReserveNone)
 				_battleGame->setReservedAction(BA_NONE);
+			
+			toggleReserveActionButton(_save->getSelectedUnit());
+			toggleExcludeActionButton(_save->getSelectedUnit());
+			
+			// update any path preview
+			if (_battleGame->getPathfinding()->isPathPreviewed())
+			{
+				_battleGame->getPathfinding()->removePreview();
+				_battleGame->getPathfinding()->previewPath();
 			}
 		}
 		
-		else if (button == SDL_BUTTON_MIDDLE)
+		else if (button == SDL_BUTTON_MIDDLE && Options::extendedReactionFire)
 		{
-			ev.type = SDL_MOUSEBUTTONDOWN;
-			ev.button.button = SDL_BUTTON_MIDDLE;
-			Action a = Action(&ev, 0.0, 0.0, 0, 0);
-			action->getSender()->mousePress(&a, this);
+			BattleUnit *unit = _save->getSelectedUnit();
 			
-			if (Options::extendedReactionFire)
-			{
-				BattleUnit *unit = _save->getSelectedUnit();
-
-				if (action->getSender() == _btnReserveSnap)
-				{
-					_battleGame->excludeAction(BA_SNAPSHOT, !unit->isExcluded(BA_SNAPSHOT));
-				}
-				if (action->getSender() == _btnReserveAuto)
-				{
-					_battleGame->excludeAction(BA_AUTOSHOT, !unit->isExcluded(BA_AUTOSHOT));
-				}
-				if (action->getSender() == _btnReserveAimed)
-				{
-					_battleGame->excludeAction(BA_AIMEDSHOT, !unit->isExcluded(BA_AIMEDSHOT));
-				}
-				
-				toggleExcludeActionButton(_save->getSelectedUnit());
-			}
+			if (action->getSender() == _btnReserveSnap)
+				_battleGame->excludeAction(BA_SNAPSHOT, !unit->isExcluded(BA_SNAPSHOT));
+			if (action->getSender() == _btnReserveAuto)
+				_battleGame->excludeAction(BA_AUTOSHOT, !unit->isExcluded(BA_AUTOSHOT));
+			if (action->getSender() == _btnReserveAimed)
+				_battleGame->excludeAction(BA_AIMEDSHOT, !unit->isExcluded(BA_AIMEDSHOT));
+			
+			toggleExcludeActionButton(_save->getSelectedUnit());
 		}
 	}
 }

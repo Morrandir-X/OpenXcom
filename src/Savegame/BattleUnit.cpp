@@ -418,6 +418,7 @@ void BattleUnit::load(const YAML::Node &node, const ScriptGlobal *shared)
 	_murdererWeapon = node["murdererWeapon"].as<std::string>(_murdererWeapon);
 	_murdererWeaponAmmo = node["murdererWeaponAmmo"].as<std::string>(_murdererWeaponAmmo);
 
+	
 	if (const YAML::Node& p = node["excludedActions"])
 	{
 		_excludedActions.clear();

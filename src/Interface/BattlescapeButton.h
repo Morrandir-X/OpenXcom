@@ -36,7 +36,7 @@ class BattlescapeButton : public InteractiveSurface
 protected:
 	Uint8 _color;
 	BattlescapeButton **_group, **_groupSelected;
-	bool _inverted, _selected, _excluded;
+	bool _inverted, _selected, _excluded, _canBeExcluded;
 	InversionType _toggleMode;
 	Surface *_altSurface, *_altSurfaceSel, *_altSurfaceInvSel, *_altSurfaceEx;
 public:
@@ -62,8 +62,8 @@ public:
 	void toggleSelected(bool select);
 	/// Set the button as excluded or not (Extended Reaction Fire)
 	void exclude(bool exclude);
-	/// Gets the exclusion status of the button.
-	bool getExclusion() const;
+	/// Sets the button as capable of being excluded.
+	void canExclude();
 	/// Allows this button to be toggled on/off with a click.
 	void allowToggleInversion();
 	/// Allows this button to be toggled on when clicked, and off when released.

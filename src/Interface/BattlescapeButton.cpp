@@ -30,7 +30,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _groupSelected(0), _inverted(false), _selected(false), _excluded(false), _toggleMode(INVERT_NONE), _altSurface(0), _altSurfaceSel(0), _altSurfaceInvSel(0), _altSurfaceEx(0)
+BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _groupSelected(0), _inverted(false), _selected(false), _excluded(false), _canBeExcluded(false), _toggleMode(INVERT_NONE), _altSurface(0), _altSurfaceSel(0), _altSurfaceInvSel(0), _altSurfaceEx(0)
 {
 }
 
@@ -88,12 +88,11 @@ void BattlescapeButton::setGroupSelected(BattlescapeButton **groupSelected)
 }
 	
 /**
- * Gets whether the button has been toggled as excluded.
- * @return True if the button has been toggled as excluded.
+ * Sets the button as capable of being excluded.
  */
-bool BattlescapeButton::getExclusion() const
+void BattlescapeButton::canExclude()
 {
-	return _excluded;
+	_canBeExcluded = true;
 }
 	
 /**
@@ -127,11 +126,12 @@ void BattlescapeButton::mousePress(Action *action, State *state)
 		}
 		else if ((_tftdMode || _toggleMode == INVERT_CLICK ) && !_selected && isButtonPressed() && isButtonHandled(action->getDetails()->button.button))
 		{
+			// FIXME: Exclude right clicking selected from expend TUs (done right?)
 			_selected = false;
 			_excluded = false;
 		}
 	}
-	else if (Options::extendedReactionFire && button == SDL_BUTTON_MIDDLE)
+	else if (Options::extendedReactionFire && button == SDL_BUTTON_MIDDLE && _canBeExcluded)
 		exclude(!_excluded);
 	
 	InteractiveSurface::mousePress(action, state);
@@ -146,19 +146,10 @@ void BattlescapeButton::mouseRelease(Action *action, State *state)
 {
 	if (_inverted && isButtonHandled(action->getDetails()->button.button))
 	{
-		if (_group == 0) // For zero TUs button
-		{
+		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 			_inverted = false;
+		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 			_selected = false;
-		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_LEFT) // Left clicked on a reserve button
-		{
-			_inverted = false;
-		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) // Right clicked on a reserve button
-		{
-			_selected = false;
-		}
 	}
 	InteractiveSurface::mouseRelease(action, state);
 }
