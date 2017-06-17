@@ -1409,6 +1409,7 @@ void BattlescapeState::btnReserveClick(Action *action)
 
 		if (button == SDL_BUTTON_LEFT)
 		{
+			
 			if (_reserve == _btnReserveNone)
 				_battleGame->setTUReserved(BA_NONE);
 			else if (_reserve == _btnReserveSnap)
@@ -1430,14 +1431,15 @@ void BattlescapeState::btnReserveClick(Action *action)
 		else if (button == SDL_BUTTON_RIGHT && Options::extendedReactionFire)
 		{
 			BattleUnit *unit = _save->getSelectedUnit();
-			BattleItem *weapon = unit->getMainHandWeapon();
-			if (weapon)
+			BattleItem *leftHandWeapon = unit->getLeftHandWeapon();
+			BattleItem *rightHandWeapon = unit->getRightHandWeapon();
+			if (leftHandWeapon || rightHandWeapon)
 			{
 				if (_select == _btnReserveNone)
 					_battleGame->setReservedAction(BA_NONE);
 				else if (_select == _btnReserveSnap &&
-							weapon->getRules()->canReact(BA_SNAPSHOT) &&
-							weapon->getRules()->getCostSnap().Time != 0)
+							((leftHandWeapon && leftHandWeapon->getRules()->canReact(BA_SNAPSHOT)) || (rightHandWeapon &&rightHandWeapon->getRules()->canReact(BA_SNAPSHOT))) &&
+							((leftHandWeapon && leftHandWeapon->getRules()->getCostSnap().Time != 0) || (rightHandWeapon && rightHandWeapon->getRules()->getCostSnap().Time != 0)))
 				{
 					_battleGame->setReservedAction(BA_SNAPSHOT);
 					// If this button was previously excluded, de-exclude it now.
@@ -1445,16 +1447,16 @@ void BattlescapeState::btnReserveClick(Action *action)
 						_battleGame->excludeAction(BA_SNAPSHOT, false);
 				}
 				else if (_select == _btnReserveAuto &&
-							weapon->getRules()->canReact(BA_AUTOSHOT) &&
-							weapon->getRules()->getCostAuto().Time != 0)
+						 ((leftHandWeapon && leftHandWeapon->getRules()->canReact(BA_AUTOSHOT)) || (rightHandWeapon &&rightHandWeapon->getRules()->canReact(BA_AUTOSHOT))) &&
+						 ((leftHandWeapon && leftHandWeapon->getRules()->getCostAuto().Time != 0) || (rightHandWeapon && rightHandWeapon->getRules()->getCostAuto().Time != 0)))
 				{
 					_battleGame->setReservedAction(BA_AUTOSHOT);
 					if (unit->isExcluded(BA_AUTOSHOT))
 						_battleGame->excludeAction(BA_AUTOSHOT, false);
 				}
 				else if (_select == _btnReserveAimed  &&
-							weapon->getRules()->canReact(BA_AIMEDSHOT) &&
-							weapon->getRules()->getCostAimed().Time != 0)
+						 ((leftHandWeapon && leftHandWeapon->getRules()->canReact(BA_AIMEDSHOT)) || (rightHandWeapon &&rightHandWeapon->getRules()->canReact(BA_AIMEDSHOT))) &&
+						 ((leftHandWeapon && leftHandWeapon->getRules()->getCostAimed().Time != 0) || (rightHandWeapon && rightHandWeapon->getRules()->getCostAimed().Time != 0)))
 				{
 					_battleGame->setReservedAction(BA_AIMEDSHOT);
 					if (unit->isExcluded(BA_AIMEDSHOT))
@@ -1729,7 +1731,7 @@ void BattlescapeState::updateSoldierInfo()
 	toggleKneelButton(battleUnit);
 	toggleReserveActionButton(battleUnit);
 	toggleExcludeActionButton(battleUnit);
-
+	
 	// FIXME: Meridian: extract into function later like Yankes did (merge conflict)
 	//drawHandsItems();
 
