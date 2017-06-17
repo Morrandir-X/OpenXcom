@@ -423,7 +423,7 @@ void BattleUnit::load(const YAML::Node &node, const ScriptGlobal *shared)
 		_excludedActions.clear();
 		for (size_t i = 0; i < p.size(); ++i)
 		{
-			_excludedActions.push_back((BattleActionType)p[i].as<int>());
+			_excludedActions.push_back((BattleActionType)p[i][0].as<int>());
 		}
 	}
 	if (const YAML::Node& p = node["recolor"])
@@ -501,6 +501,7 @@ YAML::Node BattleUnit::save(const ScriptGlobal *shared) const
 	node["murdererWeapon"] = _murdererWeapon;
 	node["murdererWeaponAmmo"] = _murdererWeaponAmmo;
 
+	// FIXME: Is there a simpler way?
 	for (size_t i = 0; i < _excludedActions.size(); ++i)
 	{
 		YAML::Node p;
@@ -1073,7 +1074,6 @@ void BattleUnit::excludeAction(BattleActionType type, bool exclude)
 	}
 	if (exclude)
 		_excludedActions.push_back(type);
-	
 }
 	
 /**
