@@ -2610,10 +2610,10 @@ BattleItem *BattleUnit::getMainHandWeapon(bool quickest, bool ignoreEmpty) const
 			return weaponLeftHand;
 		}
 	}
-	// if only one weapon has snapshot, pick that one
-	if (tuLeftHand <= 0 && tuRightHand > 0)
+	// if only one weapon has snapshot, pick that one – exception: Extended Reaction Fire
+	if (!Options::extendedReactionFire && tuLeftHand <= 0 && tuRightHand > 0)
 		return weaponRightHand;
-	else if (tuRightHand <= 0 && tuLeftHand > 0)
+	else if (!Options::extendedReactionFire && tuRightHand <= 0 && tuLeftHand > 0)
 		return weaponLeftHand;
 	// else pick the better one
 	else
